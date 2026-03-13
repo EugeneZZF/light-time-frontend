@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { PT_Sans } from "next/font/google";
+import "swiper/css";
 import "./globals.css";
+import { Header } from "@/widgets/header/index";
 
 const ptSans = PT_Sans({
   weight: ["400", "700"],
@@ -15,13 +17,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <header></header>
-      <body className={`${ptSans.variable}  antialiased`}>{children}</body>
+      <body className={`antialiased`}>
+        <div className="w-full bg-white flex items-center flex-col">
+          <div className="content-container w-[1100px]">
+            <Header />
+            {children}
+          </div>
+        </div>
+      </body>
     </html>
   );
 }
