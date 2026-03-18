@@ -1,33 +1,40 @@
 "use client";
 
-import { Swiper, SwiperSlide } from "swiper/react";
+import { Product } from "@/entities/product/model/types";
+import SmallCardProduct from "@/entities/product/ui/SmallCardProduct";
 import { Autoplay } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 
 import "swiper/css";
 
-const slides = ["Проект 1", "Проект 2", "Проект 3", "Проект 4"];
+interface SpecSliderProps {
+  productSale: Product[];
+}
 
-export default function SpecSlider() {
+export default function SpecSlider({ productSale }: SpecSliderProps) {
   return (
     <Swiper
       modules={[Autoplay]}
-      spaceBetween={0}
+      spaceBetween={40}
       slidesPerView={2}
       autoplay={{
         delay: 3000,
         disableOnInteraction: false,
       }}
       loop
-      className="w-[540px]"
+      className="w-[550px] "
+      style={{
+        padding: "10px",
+        paddingLeft: "10px",
+        marginLeft: "-35px",
+        marginTop: "-11px",
+        height: "200px",
+        // paddingBottom: "10px",
+      }}
     >
-      {slides.map((slide) => (
-        <SwiperSlide key={slide}>
-          <div
-            className="h-[180px] w-[245px] bg-neutral-200 
-          p-4 flex items-end text-[18px] font-bold text-black"
-          >
-            {slide}
-          </div>
+      {productSale.map((product) => (
+        <SwiperSlide key={product.id}>
+          <SmallCardProduct product={product} />
         </SwiperSlide>
       ))}
     </Swiper>

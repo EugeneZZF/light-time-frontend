@@ -1,35 +1,11 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { getLastProject } from "@/entities/project/api/getLastProject";
-import { Project } from "@/entities/project/types";
 
-export default function OurProject() {
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProject = async () => {
-      try {
-        const projectData = await getLastProject();
-        setProject(projectData);
-        // console.log("Fetched project:", projectData);
-      } catch (error) {
-        console.error("Error fetching project:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProject();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="w-[500px] h-[188px] bg-gray-200 animate-pulse rounded-[10px]" />
-    );
-  }
+export default async function OurProject() {
+  const project = await getLastProject().catch((error) => {
+    console.error("Error fetching project:", error);
+    return null;
+  });
 
   const imageUrl = project?.images?.[0]?.url;
 
@@ -42,7 +18,7 @@ export default function OurProject() {
             backgroundImage: imageUrl ? `url(${imageUrl})` : undefined,
           }}
         >
-          <span>{project?.title ?? 'Освещение супермаркета "АШАН Сити"'}</span>
+          <span>{project?.title ?? 'РћСЃРІРµС‰РµРЅРёРµ СЃСѓРїРµСЂРјР°СЂРєРµС‚Р° "РђРЁРђРќ РЎРёС‚Рё"'}</span>
         </div>
       </Link>
     </div>

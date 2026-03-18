@@ -1,9 +1,13 @@
-"use client";
 import Link from "next/link";
 import OurProject from "./OurProject";
 import SpecSlider from "./SpecSlider";
+import { getProductsByQuery } from "@/entities/product/api/getProductQuery";
 
-export default function SpecContainer() {
+export default async function SpecContainer() {
+  const productSale = await getProductsByQuery({ discountedOnly: true });
+
+  console.log("Fetched discounted products in SpecContainer:", productSale);
+
   return (
     <div className="w-full flex ">
       <div className="flex flex-col gap-[15px] ml-[40px]">
@@ -21,7 +25,9 @@ export default function SpecContainer() {
         >
           Спецпредложения
         </Link>
-        <SpecSlider></SpecSlider>
+        <div className="mr-[0px] ">
+          <SpecSlider productSale={productSale}></SpecSlider>
+        </div>
       </div>
     </div>
   );

@@ -1,13 +1,25 @@
-// import axios from "axios";
-import { apiClient } from "@/shared/api/client";
-import { Project } from "@/entities/project/types";
+import { Project } from "@/entities/project/model/types";
+
+const LAST_PROJECT_REVALIDATE_SECONDS = 3 * 60 * 60;
 
 export const getLastProject: () => Promise<Project> = async () => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  if (!baseUrl) {
+    throw new Error("NEXT_PUBLIC_API_URL is not configured");
+  }
+
   try {
-    const response = await apiClient.get(`/api/projects/latest`);
-    // console.log(response.data);
-    return response.data;
+    const response = await fetch(`${baseUrl}/api/projects/latest`, {
+      next: { revalidate: LAST_PROJECT_REVALIDATE_SECONDS },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+    // console.log("Fetched latest project:", await response.clone().json());
+    return (await response.json()) as Project;
   } catch (error) {
-    throw new Error(`Failed to fetch project with id ${error}`);
+    throw new Error(`Failed to fetch latest project: ${error}`);
   }
 };

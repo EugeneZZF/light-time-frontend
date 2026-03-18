@@ -4,7 +4,7 @@ export type Project = {
   content: string;
   createdAt: string;
   images: Image[];
-  equipment: any[];
+  equipment: unknown[];
   id: number;
   slug: string;
   status: string;

@@ -3,6 +3,7 @@ import { PT_Sans } from "next/font/google";
 import "swiper/css";
 import "./globals.css";
 import { Header } from "@/widgets/header/index";
+import { Footer } from "@/widgets/footer";
 
 const ptSans = PT_Sans({
   weight: ["400", "700"],
@@ -22,12 +23,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`antialiased`}>
-        <div className="w-full bg-white flex items-center flex-col">
-          <div className="content-container w-[1100px]">
+      <body className={`${ptSans.variable} min-h-screen antialiased`}>
+        <div className="flex min-h-screen w-full flex-col items-center bg-[white]">
+          <div className="content-container flex w-[1100px] flex-1 flex-col">
             <Header />
-            {children}
+            <main className="flex-1">{children}</main>
           </div>
+          <Footer />
         </div>
       </body>
     </html>
