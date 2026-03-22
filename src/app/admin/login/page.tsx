@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 export default function Login() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || "/admin";
+  const nextPath = searchParams?.get("next") || "/admin";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

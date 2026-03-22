@@ -5,6 +5,8 @@ export type Category = {
   parentId: null | number;
   isActive: boolean;
   sortOrder: number;
+  imageUrl: string;
+  description?: string;
   subcategoriesA?: Category[];
   subcategoriesB?: Category[];
   SubcategoriesA?: Category[];

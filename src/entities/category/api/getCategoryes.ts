@@ -12,7 +12,7 @@ import { Category } from "../model/types";
 //   }
 // };
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+export const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 const fetchCategories = async (): Promise<Category[]> => {
   const response = await fetch(`${baseUrl}/api/admin/categories/tree`);
@@ -24,6 +24,6 @@ const fetchCategories = async (): Promise<Category[]> => {
 };
 
 export const getCategories = unstable_cache(fetchCategories, ["categories"], {
-  revalidate: 60 * 60, // 1 hour
+  revalidate: 60, // 1 hour
   tags: ["categories"],
 });

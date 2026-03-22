@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { PT_Sans } from "next/font/google";
 import "swiper/css";
 import "./globals.css";
-import { Header } from "@/widgets/header/index";
-import { Footer } from "@/widgets/footer";
+import AppChrome from "@/shared/ui/AppChrome";
 
 const ptSans = PT_Sans({
   weight: ["400", "700"],
@@ -24,13 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${ptSans.variable} min-h-screen antialiased`}>
-        <div className="flex min-h-screen w-full flex-col items-center bg-[white]">
-          <div className="content-container flex w-[1100px] flex-1 flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-          </div>
-          <Footer />
-        </div>
+        <AppChrome>{children}</AppChrome>
       </body>
     </html>
   );
