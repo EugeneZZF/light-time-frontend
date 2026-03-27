@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Category } from "@/entities/category/model/types";
 import { Product } from "@/entities/product/model/types";
 
@@ -10,14 +10,18 @@ interface CatalogBreadcrumbsProps {
   categories: Category[];
 }
 
+type BreadcrumbItem = {
+  href?: string;
+  label: string;
+};
+
 type BreadcrumbState = {
-  categoryName?: string;
-  subcategoryName?: string;
+  items: BreadcrumbItem[];
 };
 
 type ProductBreadcrumbState = {
   title?: string;
-  categories: string[];
+  categories: BreadcrumbItem[];
 };
 
 type ProductQueryResponse =
@@ -32,12 +36,19 @@ function resolveBreadcrumbState(
   activeCategorySlug: string | null,
 ): BreadcrumbState {
   if (!activeCategorySlug) {
-    return {};
+    return { items: [] };
   }
 
   for (const category of categories) {
     if (category.slug === activeCategorySlug) {
-      return { categoryName: category.name };
+      return {
+        items: [
+          {
+            href: `/catalog?categorySlug=${category.slug}`,
+            label: category.name,
+          },
+        ],
+      };
     }
 
     const subcategories =
@@ -48,13 +59,50 @@ function resolveBreadcrumbState(
 
     if (matchedSubcategory) {
       return {
-        categoryName: category.name,
-        subcategoryName: matchedSubcategory.name,
+        items: [
+          {
+            href: `/catalog?categorySlug=${category.slug}`,
+            label: category.name,
+          },
+          {
+            href: `/catalog?categorySlug=${matchedSubcategory.slug}`,
+            label: matchedSubcategory.name,
+          },
+        ],
       };
     }
   }
 
-  return {};
+  return { items: [] };
+}
+
+function findCategorySlugById(
+  categories: Category[],
+  categoryId: number | null | undefined,
+): string | null {
+  if (!categoryId) {
+    return null;
+  }
+
+  for (const category of categories) {
+    if (category.id === categoryId) {
+      return category.slug;
+    }
+
+    const nestedCategories = [
+      ...(category.subcategoriesA ?? []),
+      ...(category.SubcategoriesA ?? []),
+      ...(category.subcategoriesB ?? []),
+      ...(category.SubcategoriesB ?? []),
+    ];
+    const nestedSlug = findCategorySlugById(nestedCategories, categoryId);
+
+    if (nestedSlug) {
+      return nestedSlug;
+    }
+  }
+
+  return null;
 }
 
 function extractProducts(data: ProductQueryResponse): Product[] {
@@ -79,10 +127,7 @@ export default function CatalogBreadcrumbs({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeCategorySlug = searchParams.get("categorySlug");
-  const { categoryName, subcategoryName } = resolveBreadcrumbState(
-    categories,
-    activeCategorySlug,
-  );
+  const { items } = resolveBreadcrumbState(categories, activeCategorySlug);
   const [productState, setProductState] = useState<ProductBreadcrumbState>({
     categories: [],
   });
@@ -122,10 +167,46 @@ export default function CatalogBreadcrumbs({
         setProductState({
           title: product.title,
           categories: [
-            product.categories.main?.name,
-            product.categories.subA?.name,
-            product.categories.subB?.name,
-          ].filter(Boolean) as string[],
+            product.categories.main
+              ? {
+                  href: (() => {
+                    const slug = findCategorySlugById(
+                      categories,
+                      product.categories.main?.id,
+                    );
+
+                    return slug ? `/catalog?categorySlug=${slug}` : undefined;
+                  })(),
+                  label: product.categories.main.name,
+                }
+              : null,
+            product.categories.subA
+              ? {
+                  href: (() => {
+                    const slug = findCategorySlugById(
+                      categories,
+                      product.categories.subA?.id,
+                    );
+
+                    return slug ? `/catalog?categorySlug=${slug}` : undefined;
+                  })(),
+                  label: product.categories.subA.name,
+                }
+              : null,
+            product.categories.subB
+              ? {
+                  href: (() => {
+                    const slug = findCategorySlugById(
+                      categories,
+                      product.categories.subB?.id,
+                    );
+
+                    return slug ? `/catalog?categorySlug=${slug}` : undefined;
+                  })(),
+                  label: product.categories.subB.name,
+                }
+              : null,
+          ].filter(Boolean) as BreadcrumbItem[],
         });
       })
       .catch(() => {
@@ -137,14 +218,12 @@ export default function CatalogBreadcrumbs({
     return () => {
       isActive = false;
     };
-  }, [productSlug]);
+  }, [categories, productSlug]);
 
   const title = productSlug
     ? productState.title ?? ""
-    : subcategoryName ?? categoryName ?? "Каталог продукции";
-  const visibleCategories = productSlug
-    ? productState.categories
-    : [categoryName, subcategoryName].filter(Boolean);
+    : items[items.length - 1]?.label ?? "Каталог продукции";
+  const visibleCategories = productSlug ? productState.categories : items;
 
   return (
     <div className="mb-8 ml-[20px] flex flex-col gap-3">
@@ -160,9 +239,15 @@ export default function CatalogBreadcrumbs({
           Каталог
         </Link>
         {visibleCategories.map((item, index) => (
-          <span key={`${item}-${index}`} className="contents">
+          <span key={`${item.label}-${index}`} className="contents">
             <span className="text-[#c9c9c9]">/</span>
-            <span>{item}</span>
+            {item.href ? (
+              <Link href={item.href} className="transition hover:text-[#ff3333]">
+                {item.label}
+              </Link>
+            ) : (
+              <span>{item.label}</span>
+            )}
           </span>
         ))}
       </nav>

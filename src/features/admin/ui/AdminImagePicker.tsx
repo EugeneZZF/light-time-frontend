@@ -44,7 +44,10 @@ function parseImageValue(value: string): ImageLineItem[] {
 
 function serializeImageValue(items: ImageLineItem[]) {
   return items
-    .map((item, index) => `${item.url}|${Number.isFinite(item.sortOrder) ? item.sortOrder : index}`)
+    .map(
+      (item, index) =>
+        `${item.url}|${Number.isFinite(item.sortOrder) ? item.sortOrder : index}`,
+    )
     .join("\n");
 }
 
@@ -157,7 +160,7 @@ export default function AdminImagePicker({
             />
             <button
               type="button"
-              aria-label="Remove image"
+              aria-label="Удалить изображение"
               onClick={() => removeImage(index)}
               className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#7e1420] text-[18px] leading-none text-white opacity-0 shadow-[0_6px_16px_rgba(126,20,32,0.28)] transition group-hover:opacity-100 hover:bg-[#991726]"
             >
@@ -180,14 +183,14 @@ export default function AdminImagePicker({
             />
             <button
               type="button"
-              aria-label="Remove pending image"
+              aria-label="Удалить ожидающее изображение"
               onClick={() => removePendingFile(index)}
               className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#7e1420] text-[18px] leading-none text-white opacity-0 shadow-[0_6px_16px_rgba(126,20,32,0.28)] transition hover:bg-[#991726] group-hover:opacity-100"
             >
               ×
             </button>
             <div className="absolute inset-x-0 bottom-0 bg-[rgba(22,47,31,0.68)] px-2 py-2 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-white">
-              Waiting Upload
+              Ожидает загрузки
             </div>
           </div>
         ))}
@@ -225,13 +228,14 @@ export default function AdminImagePicker({
         >
           <span className="text-[44px] leading-none">+</span>
           <span className="mt-1 text-[11px] font-bold uppercase tracking-[0.16em]">
-            Add image
+            Добавить
           </span>
         </button>
       </div>
 
       <p className="text-[12px] leading-[1.45] text-[#6a7d6e]">
-        Нажмите на рамку или перетащите изображения сюда. Файлы загрузятся только после `Create` или `Update`.
+        Нажмите на рамку или перетащите сюда изображения. Файлы загрузятся
+        только после нажатия кнопки сохранения.
       </p>
 
       <textarea

@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useState } from "react";
 
 export default function Login() {
   const router = useRouter();
@@ -46,7 +46,7 @@ export default function Login() {
 
   return (
     <section className="mx-auto flex min-h-[70vh] max-w-[520px] items-center px-6 py-16">
-      <div className="w-full overflow-hidden rounded-[28px] border border-[#d5e4d8]  shadow-[0_25px_80px_rgba(44,84,35,0.12)]">
+      <div className="w-full overflow-hidden rounded-[28px] border border-[#d5e4d8] shadow-[0_25px_80px_rgba(44,84,35,0.12)]">
         <div className="border-b border-[#dce9de] px-8 py-7">
           <p className="text-[13px] uppercase tracking-[0.24em] text-[#64836a]">
             Light Time
@@ -62,7 +62,7 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-8 py-8">
           <label className="flex flex-col gap-2">
-            <span className="text-[15px] font-bold text-[#23422b]">Email</span>
+            <span className="text-[15px] font-bold text-[#23422b]">Почта</span>
             <input
               type="email"
               autoComplete="email"

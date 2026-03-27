@@ -5,9 +5,7 @@ type AdminNavMenuItem = {
   label: string;
 };
 
-const adminNavItems: AdminNavMenuItem[] = [
-  { href: "/admin", label: "Dashboard" },
-];
+const adminNavItems: AdminNavMenuItem[] = [{ href: "/admin", label: "Обзор" }];
 
 export default function AdminNavMenu() {
   return (

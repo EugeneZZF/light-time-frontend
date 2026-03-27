@@ -1,14 +1,14 @@
 "use client";
 
-import { adminRequest, adminUploadFile } from "@/features/admin/api/client";
 import { baseUrl } from "@/entities/category/api/getCategoryes";
-import { AdminProduct, AdminProject } from "@/features/admin/model/types";
+import { adminRequest, adminUploadFile } from "@/features/admin/api/client";
 import {
   parseProjectEquipmentLines,
   parseProjectImages,
   serializeProjectEquipment,
   serializeProjectImages,
 } from "@/features/admin/lib/utils";
+import { AdminProduct, AdminProject } from "@/features/admin/model/types";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   AdminInput,
@@ -22,6 +22,7 @@ import AdminSurface from "./AdminSurface";
 
 type ProjectFormState = {
   content: string;
+  description: string;
   equipmentLines: string;
   imageLines: string;
   slug: string;
@@ -31,11 +32,18 @@ type ProjectFormState = {
 
 const emptyForm: ProjectFormState = {
   content: "",
+  description: "",
   equipmentLines: "",
   imageLines: "",
   slug: "",
   status: "DRAFT",
   title: "",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  ARCHIVED: "Архив",
+  DRAFT: "Черновик",
+  PUBLISHED: "Опубликовано",
 };
 
 export default function ProjectsManager() {
@@ -142,7 +150,7 @@ export default function ProjectsManager() {
         setError(
           loadError instanceof Error
             ? loadError.message
-            : "Failed to load projects.",
+            : "Не удалось загрузить проекты.",
         );
       }
     })();
@@ -167,6 +175,7 @@ export default function ProjectsManager() {
     setSelectedProject(project);
     setForm({
       content: project.content,
+      description: project.description ?? "",
       equipmentLines: serializeProjectEquipment(unmatchedEquipment),
       imageLines: serializeProjectImages(project.images),
       slug: project.slug,
@@ -199,6 +208,7 @@ export default function ProjectsManager() {
         const body = {
           slug: form.slug,
           title: form.title,
+          description: form.description || null,
           content: form.content,
           status: form.status,
           images: [
@@ -235,7 +245,7 @@ export default function ProjectsManager() {
         setError(
           submitError instanceof Error
             ? submitError.message
-            : "Failed to save project.",
+            : "Не удалось сохранить проект.",
         );
       }
     });
@@ -257,7 +267,7 @@ export default function ProjectsManager() {
         setError(
           deleteError instanceof Error
             ? deleteError.message
-            : "Failed to delete project.",
+            : "Не удалось удалить проект.",
         );
       }
     });
@@ -266,15 +276,15 @@ export default function ProjectsManager() {
   return (
     <>
       <AdminPageHeader
-        title="Projects"
-        description="Manage portfolio entries, attach image URLs, and build project equipment from ready catalog products."
+        title="Проекты"
+        description="Управляйте проектами портфолио, добавляйте изображения и собирайте оборудование из готовых товаров каталога."
         action={
           <button
             type="button"
             onClick={resetForm}
             className="rounded-[16px] bg-[#173523] px-5 py-3 text-[15px] font-bold text-white transition hover:bg-[#214a31]"
           >
-            New project
+            Новый проект
           </button>
         }
       />
@@ -286,10 +296,7 @@ export default function ProjectsManager() {
               <button
                 key={project.id}
                 type="button"
-                onClick={() => {
-                  startEdit(project);
-                  console.log(project);
-                }}
+                onClick={() => startEdit(project)}
                 className="rounded-[22px] border border-[#dfe8e1] bg-[#f9fcfa] p-4 text-left transition hover:border-[#a3bcaa]"
               >
                 <div className="flex items-start justify-between gap-3">
@@ -297,18 +304,23 @@ export default function ProjectsManager() {
                     {project.title}
                   </div>
                   <div className="rounded-full border border-[#d7e1d9] bg-white px-3 py-1 text-[11px] font-bold text-[#516556]">
-                    {project.status}
+                    {STATUS_LABELS[project.status] ?? project.status}
                   </div>
                 </div>
                 <div className="mt-1 text-[13px] text-[#607566]">
                   {project.slug}
                 </div>
-                <div className="mt-2 line-clamp-3 text-[14px] leading-[1.5] text-[#506657]">
+                {project.description ? (
+                  <div className="mt-2 whitespace-pre-wrap text-[13px] leading-[1.5] text-[#6f8274]">
+                    {project.description}
+                  </div>
+                ) : null}
+                <div className="mt-2 line-clamp-3 whitespace-pre-wrap text-[14px] leading-[1.5] text-[#506657]">
                   {project.content}
                 </div>
                 <div className="mt-3 text-[12px] text-[#7b8e7f]">
-                  {project.images.length} images • {project.equipment.length}{" "}
-                  equipment entries
+                  {project.images.length} изображений • {project.equipment.length}{" "}
+                  позиций оборудования
                 </div>
               </button>
             ))}
@@ -317,11 +329,11 @@ export default function ProjectsManager() {
 
         <AdminSurface>
           <div className="text-[22px] font-bold text-[#173523]">
-            {selectedProject ? "Edit project" : "Create project"}
+            {selectedProject ? "Редактировать проект" : "Создать проект"}
           </div>
 
           <div className="mt-5 flex flex-col gap-4">
-            <AdminLabel label="Title">
+            <AdminLabel label="Название">
               <AdminInput
                 value={form.title}
                 onChange={(event) =>
@@ -346,7 +358,7 @@ export default function ProjectsManager() {
                 />
               </AdminLabel>
 
-              <AdminLabel label="Status">
+              <AdminLabel label="Статус">
                 <AdminSelect
                   value={form.status}
                   onChange={(event) =>
@@ -356,14 +368,28 @@ export default function ProjectsManager() {
                     }))
                   }
                 >
-                  <option value="DRAFT">DRAFT</option>
-                  <option value="PUBLISHED">PUBLISHED</option>
-                  <option value="ARCHIVED">ARCHIVED</option>
+                  <option value="DRAFT">Черновик</option>
+                  <option value="PUBLISHED">Опубликовано</option>
+                  <option value="ARCHIVED">Архив</option>
                 </AdminSelect>
               </AdminLabel>
             </div>
 
-            <AdminLabel label="Content">
+            <AdminLabel label="Описание">
+              <AdminTextarea
+                value={form.description}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    description: event.target.value,
+                  }))
+                }
+                className="min-h-[90px]"
+                placeholder="Краткое описание проекта"
+              />
+            </AdminLabel>
+
+            <AdminLabel label="Контент">
               <AdminTextarea
                 value={form.content}
                 onChange={(event) =>
@@ -376,7 +402,7 @@ export default function ProjectsManager() {
               />
             </AdminLabel>
 
-            <AdminLabel label="Images">
+            <AdminLabel label="Изображения">
               <AdminImagePicker
                 value={form.imageLines}
                 pendingFiles={pendingImages}
@@ -391,7 +417,7 @@ export default function ProjectsManager() {
               />
             </AdminLabel>
 
-            <AdminLabel label="Selected equipment">
+            <AdminLabel label="Выбранное оборудование">
               <div className="grid gap-3">
                 {selectedEquipmentProducts.length ? (
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -413,7 +439,7 @@ export default function ProjectsManager() {
                             {product.title}
                           </div>
                           <div className="mt-1 text-[12px] text-[#607566]">
-                            {product.sku || "No SKU"} • {product.slug}
+                            {product.sku || "Без SKU"} • {product.slug}
                           </div>
                           <div className="mt-2 text-[13px] text-[#36533e]">
                             {product.discount.hasDiscount &&
@@ -427,7 +453,7 @@ export default function ProjectsManager() {
                             onClick={() => toggleEquipmentProduct(product.id)}
                             className="mt-3 rounded-[12px] border border-[#e5c7c7] bg-white px-3 py-2 text-[12px] font-bold text-[#933d3d] transition hover:bg-[#fff5f5]"
                           >
-                            Remove
+                            Убрать
                           </button>
                         </div>
                       </div>
@@ -435,13 +461,13 @@ export default function ProjectsManager() {
                   </div>
                 ) : (
                   <div className="rounded-[18px] border border-dashed border-[#cdd9cf] bg-[#fafcfb] px-4 py-5 text-[14px] text-[#6d8070]">
-                    No products selected for equipment yet.
+                    Товары для оборудования пока не выбраны.
                   </div>
                 )}
               </div>
             </AdminLabel>
 
-            <AdminLabel label="Choose products for equipment">
+            <AdminLabel label="Выбор товаров для оборудования">
               <div className="grid max-h-[360px] gap-3 overflow-y-auto pr-1">
                 {products.map((product) => {
                   const isSelected = selectedEquipmentIds.includes(product.id);
@@ -470,7 +496,7 @@ export default function ProjectsManager() {
                           {product.title}
                         </div>
                         <div className="mt-1 text-[12px] text-[#607566]">
-                          {product.sku || "No SKU"} • {product.slug}
+                          {product.sku || "Без SKU"} • {product.slug}
                         </div>
                         <div className="mt-2 text-[13px] text-[#36533e]">
                           {product.discount.hasDiscount &&
@@ -487,27 +513,13 @@ export default function ProjectsManager() {
                             : "border border-[#d7e1d9] bg-white text-[#516556]"
                         }`}
                       >
-                        {isSelected ? "Selected" : "Add"}
+                        {isSelected ? "Выбрано" : "Добавить"}
                       </div>
                     </button>
                   );
                 })}
               </div>
             </AdminLabel>
-
-            {/* <AdminLabel label="Manual equipment lines">
-              <AdminTextarea
-                value={form.equipmentLines}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    equipmentLines: event.target.value,
-                  }))
-                }
-                className="min-h-[140px]"
-                placeholder="Optional fallback: Name|149.19|https://example.com|/uploads/equipment.webp|Short description"
-              />
-            </AdminLabel> */}
           </div>
 
           {error ? (
@@ -523,7 +535,11 @@ export default function ProjectsManager() {
               disabled={isPending}
               className="rounded-[16px] bg-[#173523] px-5 py-3 text-[15px] font-bold text-white transition hover:bg-[#214a31] disabled:opacity-60"
             >
-              {isPending ? "Saving..." : selectedProject ? "Update" : "Create"}
+              {isPending
+                ? "Сохранение..."
+                : selectedProject
+                  ? "Обновить"
+                  : "Создать"}
             </button>
 
             {selectedProject ? (
@@ -533,7 +549,7 @@ export default function ProjectsManager() {
                 disabled={isPending}
                 className="rounded-[16px] border border-[#e6c6c6] bg-[#fff6f6] px-5 py-3 text-[15px] font-bold text-[#9a3939] transition hover:bg-[#fff0f0] disabled:opacity-60"
               >
-                Delete
+                Удалить
               </button>
             ) : null}
           </div>

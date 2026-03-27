@@ -25,8 +25,8 @@ export default function ProductPurchasePanel({
     <>
       <div className="flex items-start gap-[18px]">
         <div
-          className="inline-flex h-[43px] w-[183px] items-center pl-[24px]
-            pr-[20px] font-bold text-[32px] leading-[32px] whitespace-nowrap
+          className="inline-flex h-[43px] w-auto items-center pl-[24px]
+            pr-[10px] font-bold text-[32px] leading-[32px] whitespace-nowrap
             text-white shadow-[0_4px_12px_rgba(0,0,0,0.18)]
             [clip-path:polygon(18px_0,100%_0,100%_100%,18px_100%,0_50%)]"
           style={{
@@ -71,7 +71,9 @@ export default function ProductPurchasePanel({
       </div>
 
       <p className="mt-[14px] text-[16px] text-black">
-        {inStock ? "В наличии: товар есть на складе" : "В наличии: нет в наличии"}
+        {inStock
+          ? "В наличии: товар есть на складе"
+          : "В наличии: нет в наличии"}
       </p>
     </>
   );

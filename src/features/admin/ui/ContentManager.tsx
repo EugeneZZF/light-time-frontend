@@ -1,8 +1,8 @@
 "use client";
 
 import { adminRequest } from "@/features/admin/api/client";
-import { AdminNewsItem, AdminPageItem } from "@/features/admin/model/types";
 import { formatAdminDate } from "@/features/admin/lib/utils";
+import { AdminNewsItem, AdminArticleItem } from "@/features/admin/model/types";
 import { useEffect, useState, useTransition } from "react";
 import {
   AdminInput,
@@ -13,12 +13,12 @@ import {
 import AdminPageHeader from "./AdminPageHeader";
 import AdminSurface from "./AdminSurface";
 
-type ContentItem = AdminNewsItem | AdminPageItem;
+type ContentItem = AdminNewsItem | AdminArticleItem;
 
 type ContentManagerProps = {
   description: string;
   includePublishedAt?: boolean;
-  resourcePath: "news" | "pages";
+  resourcePath: "news" | "articles";
   title: string;
 };
 
@@ -36,6 +36,12 @@ const emptyForm: ContentFormState = {
   slug: "",
   status: "DRAFT",
   title: "",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  ARCHIVED: "Архив",
+  DRAFT: "Черновик",
+  PUBLISHED: "Опубликовано",
 };
 
 export default function ContentManager({
@@ -75,7 +81,7 @@ export default function ContentManager({
         setError(
           loadError instanceof Error
             ? loadError.message
-            : `Failed to load ${resourcePath}.`,
+            : `Не удалось загрузить ${resourcePath}.`,
         );
       }
     })();
@@ -96,7 +102,9 @@ export default function ContentManager({
     setForm({
       content: item.content,
       publishedAt:
-        "publishedAt" in item && item.publishedAt ? item.publishedAt.slice(0, 16) : "",
+        "publishedAt" in item && item.publishedAt
+          ? item.publishedAt.slice(0, 16)
+          : "",
       slug: item.slug,
       status: item.status,
       title: item.title,
@@ -138,7 +146,7 @@ export default function ContentManager({
         setError(
           submitError instanceof Error
             ? submitError.message
-            : `Failed to save ${resourcePath}.`,
+            : `Не удалось сохранить ${resourcePath}.`,
         );
       }
     });
@@ -160,7 +168,7 @@ export default function ContentManager({
         setError(
           deleteError instanceof Error
             ? deleteError.message
-            : `Failed to delete ${resourcePath}.`,
+            : `Не удалось удалить ${resourcePath}.`,
         );
       }
     });
@@ -177,7 +185,7 @@ export default function ContentManager({
             onClick={resetForm}
             className="rounded-[16px] bg-[#173523] px-5 py-3 text-[15px] font-bold text-white transition hover:bg-[#214a31]"
           >
-            New entry
+            Новая запись
           </button>
         }
       />
@@ -197,15 +205,17 @@ export default function ContentManager({
                     {item.title}
                   </div>
                   <div className="rounded-full border border-[#d7e1d9] bg-white px-3 py-1 text-[11px] font-bold text-[#516556]">
-                    {item.status}
+                    {STATUS_LABELS[item.status] ?? item.status}
                   </div>
                 </div>
-                <div className="mt-1 text-[13px] text-[#607566]">{item.slug}</div>
+                <div className="mt-1 text-[13px] text-[#607566]">
+                  {item.slug}
+                </div>
                 <div className="mt-2 line-clamp-3 text-[14px] leading-[1.5] text-[#506657]">
                   {item.content}
                 </div>
                 <div className="mt-3 text-[12px] text-[#7b8e7f]">
-                  Updated {formatAdminDate(item.updatedAt)}
+                  Обновлено {formatAdminDate(item.updatedAt)}
                 </div>
               </button>
             ))}
@@ -214,15 +224,18 @@ export default function ContentManager({
 
         <AdminSurface>
           <div className="text-[22px] font-bold text-[#173523]">
-            {selectedItem ? "Edit entry" : "Create entry"}
+            {selectedItem ? "Редактировать запись" : "Создать запись"}
           </div>
 
           <div className="mt-5 flex flex-col gap-4">
-            <AdminLabel label="Title">
+            <AdminLabel label="Заголовок">
               <AdminInput
                 value={form.title}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, title: event.target.value }))
+                  setForm((current) => ({
+                    ...current,
+                    title: event.target.value,
+                  }))
                 }
               />
             </AdminLabel>
@@ -231,26 +244,32 @@ export default function ContentManager({
               <AdminInput
                 value={form.slug}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, slug: event.target.value }))
+                  setForm((current) => ({
+                    ...current,
+                    slug: event.target.value,
+                  }))
                 }
               />
             </AdminLabel>
 
-            <AdminLabel label="Status">
+            <AdminLabel label="Статус">
               <AdminSelect
                 value={form.status}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, status: event.target.value }))
+                  setForm((current) => ({
+                    ...current,
+                    status: event.target.value,
+                  }))
                 }
               >
-                <option value="DRAFT">DRAFT</option>
-                <option value="PUBLISHED">PUBLISHED</option>
-                <option value="ARCHIVED">ARCHIVED</option>
+                <option value="DRAFT">Черновик</option>
+                <option value="PUBLISHED">Опубликовано</option>
+                <option value="ARCHIVED">Архив</option>
               </AdminSelect>
             </AdminLabel>
 
             {includePublishedAt ? (
-              <AdminLabel label="Published at">
+              <AdminLabel label="Дата публикации">
                 <AdminInput
                   type="datetime-local"
                   value={form.publishedAt}
@@ -264,11 +283,14 @@ export default function ContentManager({
               </AdminLabel>
             ) : null}
 
-            <AdminLabel label="Content">
+            <AdminLabel label="Контент">
               <AdminTextarea
                 value={form.content}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, content: event.target.value }))
+                  setForm((current) => ({
+                    ...current,
+                    content: event.target.value,
+                  }))
                 }
                 className="min-h-[240px]"
               />
@@ -288,7 +310,11 @@ export default function ContentManager({
               disabled={isPending}
               className="rounded-[16px] bg-[#173523] px-5 py-3 text-[15px] font-bold text-white transition hover:bg-[#214a31] disabled:opacity-60"
             >
-              {isPending ? "Saving..." : selectedItem ? "Update" : "Create"}
+              {isPending
+                ? "Сохранение..."
+                : selectedItem
+                  ? "Обновить"
+                  : "Создать"}
             </button>
 
             {selectedItem ? (
@@ -298,7 +324,7 @@ export default function ContentManager({
                 disabled={isPending}
                 className="rounded-[16px] border border-[#e6c6c6] bg-[#fff6f6] px-5 py-3 text-[15px] font-bold text-[#9a3939] transition hover:bg-[#fff0f0] disabled:opacity-60"
               >
-                Delete
+                Удалить
               </button>
             ) : null}
           </div>

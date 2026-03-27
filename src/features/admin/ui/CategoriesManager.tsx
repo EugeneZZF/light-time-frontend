@@ -1,13 +1,13 @@
 "use client";
 
-import { adminRequest, adminUploadFile } from "@/features/admin/api/client";
 import { baseUrl } from "@/entities/category/api/getCategoryes";
-import { AdminCategory } from "@/features/admin/model/types";
+import { adminRequest, adminUploadFile } from "@/features/admin/api/client";
 import {
   flattenCategoryTree,
   formatAdminDate,
   parseImageLines,
 } from "@/features/admin/lib/utils";
+import { AdminCategory } from "@/features/admin/model/types";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   AdminInput,
@@ -68,8 +68,8 @@ function CategoryTree({
                   {item.name}
                 </div>
                 <div className="mt-1 text-[13px] text-[#607566]">
-                  {item.slug} • sort {item.sortOrder} •{" "}
-                  {item.isActive ? "active" : "hidden"}
+                  {item.slug} • сортировка {item.sortOrder} •{" "}
+                  {item.isActive ? "активна" : "скрыта"}
                 </div>
                 {item.description ? (
                   <div className="mt-2 max-w-[780px] text-[14px] leading-[1.5] text-[#506657]">
@@ -84,7 +84,7 @@ function CategoryTree({
               onClick={() => onEdit(item)}
               className="rounded-[14px] border border-[#cfddd2] bg-white px-4 py-2 text-[14px] font-bold text-[#1a3a27] transition hover:border-[#8eb39a] hover:bg-[#f4faf5]"
             >
-              Edit
+              Редактировать
             </button>
           </div>
 
@@ -145,7 +145,7 @@ export default function CategoriesManager() {
         setError(
           loadError instanceof Error
             ? loadError.message
-            : "Failed to load categories.",
+            : "Не удалось загрузить категории.",
         );
       }
     })();
@@ -220,7 +220,7 @@ export default function CategoriesManager() {
         setError(
           submitError instanceof Error
             ? submitError.message
-            : "Failed to save category.",
+            : "Не удалось сохранить категорию.",
         );
       }
     });
@@ -243,7 +243,7 @@ export default function CategoriesManager() {
         setError(
           deleteError instanceof Error
             ? deleteError.message
-            : "Failed to delete category.",
+            : "Не удалось удалить категорию.",
         );
       }
     });
@@ -252,15 +252,15 @@ export default function CategoriesManager() {
   return (
     <>
       <AdminPageHeader
-        title="Categories"
-        description="Browse the full category tree, create new branches, and adjust sorting or visibility for every level."
+        title="Категории"
+        description="Просматривайте полное дерево категорий, создавайте новые ветки и управляйте сортировкой и видимостью на каждом уровне."
         action={
           <button
             type="button"
             onClick={resetForm}
             className="rounded-[16px] bg-[#173523] px-5 py-3 text-[15px] font-bold text-white transition hover:bg-[#214a31]"
           >
-            New category
+            Новая категория
           </button>
         }
       />
@@ -268,7 +268,7 @@ export default function CategoriesManager() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_420px]">
         <AdminSurface>
           {categories.length === 0 ? (
-            <div className="text-[15px] text-[#617765]">No categories yet.</div>
+            <div className="text-[15px] text-[#617765]">Категорий пока нет.</div>
           ) : (
             <CategoryTree items={categories} onEdit={startEdit} />
           )}
@@ -276,22 +276,24 @@ export default function CategoriesManager() {
 
         <AdminSurface>
           <div className="text-[22px] font-bold text-[#173523]">
-            {selectedCategory ? "Edit category" : "Create category"}
+            {selectedCategory
+              ? "Редактировать категорию"
+              : "Создать категорию"}
           </div>
           <div className="mt-2 text-[14px] text-[#647a68]">
             {selectedCategory
-              ? `Last update ${formatAdminDate(selectedCategory.updatedAt)}`
-              : "Pick a parent category to create sub levels."}
+              ? `Последнее обновление ${formatAdminDate(selectedCategory.updatedAt)}`
+              : "Выберите родительскую категорию, чтобы создать вложенный уровень."}
           </div>
 
           <div className="mt-5 flex flex-col gap-4">
-            <AdminLabel label="Name">
+            <AdminLabel label="Название">
               <AdminInput
                 value={form.name}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, name: event.target.value }))
                 }
-                placeholder="Track systems"
+                placeholder="Трековые системы"
               />
             </AdminLabel>
 
@@ -305,7 +307,7 @@ export default function CategoriesManager() {
               />
             </AdminLabel>
 
-            <AdminLabel label="Parent category">
+            <AdminLabel label="Родительская категория">
               <AdminSelect
                 value={form.parentId}
                 onChange={(event) =>
@@ -315,7 +317,7 @@ export default function CategoriesManager() {
                   }))
                 }
               >
-                <option value="">Root category</option>
+                <option value="">Корневая категория</option>
                 {flatCategories.map((item) => (
                   <option key={item.id} value={item.id}>
                     {"-- ".repeat(item.level)}
@@ -326,7 +328,7 @@ export default function CategoriesManager() {
             </AdminLabel>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <AdminLabel label="Sort order">
+              <AdminLabel label="Порядок сортировки">
                 <AdminInput
                   type="number"
                   value={form.sortOrder}
@@ -351,12 +353,12 @@ export default function CategoriesManager() {
                   }
                 />
                 <span className="text-[14px] font-bold text-[#23402b]">
-                  Active category
+                  Активная категория
                 </span>
               </label>
             </div>
 
-            <AdminLabel label="Image">
+            <AdminLabel label="Изображение">
               <AdminImagePicker
                 value={form.imageLines}
                 pendingFiles={pendingImages}
@@ -371,7 +373,7 @@ export default function CategoriesManager() {
               />
             </AdminLabel>
 
-            <AdminLabel label="Description">
+            <AdminLabel label="Описание">
               <AdminTextarea
                 value={form.description}
                 onChange={(event) =>
@@ -380,7 +382,7 @@ export default function CategoriesManager() {
                     description: event.target.value,
                   }))
                 }
-                placeholder="Short category description"
+                placeholder="Краткое описание категории"
               />
             </AdminLabel>
           </div>
@@ -398,7 +400,11 @@ export default function CategoriesManager() {
               disabled={isPending}
               className="rounded-[16px] bg-[#173523] px-5 py-3 text-[15px] font-bold text-white transition hover:bg-[#214a31] disabled:opacity-60"
             >
-              {isPending ? "Saving..." : selectedCategory ? "Update" : "Create"}
+              {isPending
+                ? "Сохранение..."
+                : selectedCategory
+                  ? "Обновить"
+                  : "Создать"}
             </button>
 
             {selectedCategory ? (
@@ -408,7 +414,7 @@ export default function CategoriesManager() {
                 disabled={isPending}
                 className="rounded-[16px] border border-[#e6c6c6] bg-[#fff6f6] px-5 py-3 text-[15px] font-bold text-[#9a3939] transition hover:bg-[#fff0f0] disabled:opacity-60"
               >
-                Delete
+                Удалить
               </button>
             ) : null}
           </div>

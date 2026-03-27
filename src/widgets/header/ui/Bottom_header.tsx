@@ -3,67 +3,69 @@ import { CONTACT_INFO } from "../model/links";
 
 export function BottomHeader() {
   return (
-    <div className="w-full  h-[157px] pt-[25px] pb-[25px] pl-[57px] gap-[57px] flex">
-      <img src="/header/logo.png" alt="Logo" className="w-[215px] h-[82px]" />
-      <div className="w-[451px] h-[107px]  flex-col gap-[15px] flex items-start justify-start">
+    <div className="flex h-[157px] w-full gap-[57px] pb-[25px] pl-[57px] pt-[25px]">
+      <img src="/header/logo.png" alt="Light Time" className="h-[82px] w-[215px]" />
+
+      <div className="flex h-[107px] w-[451px] flex-col items-start justify-start gap-[15px]">
         <div className="upper flex gap-[72px]">
           <div className="phone-cont text-nowrap">
             <div>
-              <div className="flex gap-[3px] text-[22px] text-black font-bold items-center ">
-                <img
-                  src="/header/phone.jpg"
-                  className="w-[16px] h-[19px]"
-                ></img>
+              <div className="flex items-center gap-[3px] text-[22px] font-bold text-black">
+                <img src="/header/phone.jpg" alt="" className="h-[19px] w-[16px]" />
                 <p className="h-[26px] leading-[26px]">{CONTACT_INFO.phone}</p>
               </div>
-              <p
-                className="pl-[21px] mt-[10px] text-[#666666]
-              text-[12px] leading-[12px] 
-              "
-              >
+              <p className="mt-[10px] pl-[21px] text-[12px] leading-[12px] text-[#666666]">
                 {CONTACT_INFO.hours}
               </p>
             </div>
           </div>
+
           <div className="mail-cont flex h-[24px] items-center gap-[3px]">
             <img
               src="/header/mail.jpg"
-              alt="Logo"
-              className="w-[36px] h-[18px] mb-[-5px]"
+              alt="Mail"
+              className="mb-[-5px] h-[18px] w-[36px]"
             />
             <a
               href={`mailto:${CONTACT_INFO.email}`}
-              className="text-[12px] text-nowrap text-[#0098DD] text-[18px] leading-[12px] underline"
+              className="text-nowrap text-[18px] leading-[12px] text-[#0098DD] underline"
             >
               {CONTACT_INFO.email}
             </a>
           </div>
         </div>
-        {/* <div className="down w-full"></div> */}
-        <div
-          className="w-full bg-[#f3f3f3] border-[3px] shadow-[inset_0_2px_3px_rgba(0,0,0,0.3)] border-white text-[#666666] flex items-center relative font-bold h-[43px]"
+
+        <form
+          action="/search"
+          method="get"
+          className="relative flex h-[43px] w-full items-center border-[3px] border-white bg-[#f3f3f3] font-bold text-[#666666] shadow-[inset_0_2px_3px_rgba(0,0,0,0.3)]"
           style={{ paddingLeft: "15px", paddingRight: "45px" }}
         >
           <input
+            name="q"
             placeholder="Поиск по каталогу"
-            className="w-full active:none border-none outline-none bg-transparent font-[18px] leading-[18px]"
-          ></input>
-          <img
-            src="/header/search.jpg"
-            alt="Logo"
-            className="w-[21px] h-[24px] absolute right-[15px]"
+            className="w-full border-none bg-transparent font-[18px] leading-[18px] outline-none"
           />
-        </div>
+          <button
+            type="submit"
+            aria-label="Искать"
+            className="absolute right-[15px]"
+          >
+            <img
+              src="/header/search.jpg"
+              alt="Поиск"
+              className="h-[24px] w-[21px]"
+            />
+          </button>
+        </form>
       </div>
-      <div className="flex  w-[170px] ml-[20px] gap-[5px] ">
-        <img src="/header/list.jpg" className="w-[18px] h-[22px]"></img>
+
+      <div className="ml-[20px] flex w-[170px] gap-[5px]">
+        <img src="/header/list.jpg" alt="" className="h-[22px] w-[18px]" />
         <div className="flex flex-col">
           <Link
-            href={"/"}
-            className="text-[#0098DD] underline 
-            
-            line-[23.4px] text-[18px] leading-[18px]
-            "
+            href="/"
+            className="text-[18px] leading-[18px] text-[#0098DD] underline"
           >
             Скачать оптовый прайс-лист
           </Link>

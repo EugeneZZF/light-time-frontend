@@ -2,9 +2,8 @@
 
 import { adminRequest, adminUploadFile } from "@/features/admin/api/client";
 import { baseUrl } from "@/entities/category/api/getCategoryes";
-import { parseImageLines } from "@/features/admin/lib/utils";
+import { formatAdminDate, parseImageLines } from "@/features/admin/lib/utils";
 import { AdminBrand } from "@/features/admin/model/types";
-import { formatAdminDate } from "@/features/admin/lib/utils";
 import { useEffect, useState, useTransition } from "react";
 import { AdminInput, AdminLabel, AdminTextarea } from "./AdminFormPrimitives";
 import AdminImagePicker from "./AdminImagePicker";
@@ -56,7 +55,9 @@ export default function BrandsManager() {
         }
 
         setError(
-          loadError instanceof Error ? loadError.message : "Failed to load brands.",
+          loadError instanceof Error
+            ? loadError.message
+            : "Не удалось загрузить бренды.",
         );
       }
     })();
@@ -82,20 +83,22 @@ export default function BrandsManager() {
       slug: brand.slug,
     });
     setPendingImages([]);
+    setError("");
   }
 
   function submitForm() {
     startTransition(async () => {
       try {
+        const existingImageUrl = parseImageLines(form.imageLines)[0]?.url ?? null;
         const uploadedImage = pendingImages[0]
           ? await adminUploadFile(pendingImages[0])
           : null;
-        const existingImageUrl = parseImageLines(form.imageLines)[0]?.url ?? null;
+
         const body = {
           name: form.name,
           slug: form.slug,
-          description: form.description || null,
           imageUrl: uploadedImage?.url ?? existingImageUrl,
+          description: form.description || null,
         };
 
         if (selectedBrand) {
@@ -116,7 +119,7 @@ export default function BrandsManager() {
         setError(
           submitError instanceof Error
             ? submitError.message
-            : "Failed to save brand.",
+            : "Не удалось сохранить бренд.",
         );
       }
     });
@@ -129,14 +132,16 @@ export default function BrandsManager() {
 
     startTransition(async () => {
       try {
-        await adminRequest(`brands/${selectedBrand.id}`, { method: "DELETE" });
+        await adminRequest(`brands/${selectedBrand.id}`, {
+          method: "DELETE",
+        });
         await loadBrands();
         resetForm();
       } catch (deleteError) {
         setError(
           deleteError instanceof Error
             ? deleteError.message
-            : "Failed to delete brand.",
+            : "Не удалось удалить бренд.",
         );
       }
     });
@@ -145,20 +150,20 @@ export default function BrandsManager() {
   return (
     <>
       <AdminPageHeader
-        title="Brands"
-        description="Manage the brand directory used across the catalog and keep slugs or descriptions in sync."
+        title="Бренды"
+        description="Создавайте бренды каталога, загружайте логотип или изображение и управляйте названием, slug и описанием из одной панели."
         action={
           <button
             type="button"
             onClick={resetForm}
             className="rounded-[16px] bg-[#173523] px-5 py-3 text-[15px] font-bold text-white transition hover:bg-[#214a31]"
           >
-            New brand
+            Новый бренд
           </button>
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_420px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_440px]">
         <AdminSurface>
           <div className="grid gap-4">
             {brands.map((brand) => (
@@ -166,10 +171,10 @@ export default function BrandsManager() {
                 key={brand.id}
                 type="button"
                 onClick={() => startEdit(brand)}
-                className="grid gap-4 rounded-[20px] border border-[#dfe8e1] bg-[#f9fcfa] p-4 text-left transition hover:border-[#a3bcaa] md:grid-cols-[84px_minmax(0,1fr)]"
+                className="grid gap-4 rounded-[22px] border border-[#dfe8e1] bg-[#f9fcfa] p-4 text-left transition hover:border-[#a3bcaa] md:grid-cols-[92px_minmax(0,1fr)]"
               >
                 <div
-                  className="h-[84px] rounded-[18px] border border-[#dbe6dd] bg-[#eef4ef] bg-cover bg-center"
+                  className="h-[92px] rounded-[18px] bg-[#eef4ef] bg-cover bg-center"
                   style={{
                     backgroundImage: brand.imageUrl
                       ? `url(${baseUrl}${brand.imageUrl})`
@@ -177,19 +182,22 @@ export default function BrandsManager() {
                   }}
                 />
                 <div>
-                  <div className="text-[18px] font-bold text-[#173523]">
-                    {brand.name}
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="text-[18px] font-bold text-[#173523]">
+                      {brand.name}
+                    </div>
+                    <div className="rounded-full border border-[#d7e1d9] bg-white px-3 py-1 text-[11px] font-bold text-[#516556]">
+                      БРЕНД
+                    </div>
                   </div>
                   <div className="mt-1 text-[13px] text-[#607566]">
                     {brand.slug}
                   </div>
-                  {brand.description ? (
-                    <div className="mt-2 text-[14px] text-[#506657]">
-                      {brand.description}
-                    </div>
-                  ) : null}
+                  <div className="mt-2 text-[13px] text-[#6c8170] line-clamp-2">
+                    {brand.description || "Нет описания"}
+                  </div>
                   <div className="mt-3 text-[12px] text-[#7b8e7f]">
-                    Updated {formatAdminDate(brand.updatedAt)}
+                    Обновлено {formatAdminDate(brand.updatedAt)}
                   </div>
                 </div>
               </button>
@@ -199,15 +207,18 @@ export default function BrandsManager() {
 
         <AdminSurface>
           <div className="text-[22px] font-bold text-[#173523]">
-            {selectedBrand ? "Edit brand" : "Create brand"}
+            {selectedBrand ? "Редактировать бренд" : "Создать бренд"}
           </div>
 
           <div className="mt-5 flex flex-col gap-4">
-            <AdminLabel label="Name">
+            <AdminLabel label="Название">
               <AdminInput
                 value={form.name}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, name: event.target.value }))
+                  setForm((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
                 }
                 placeholder="Nordic Aluminium"
               />
@@ -217,13 +228,16 @@ export default function BrandsManager() {
               <AdminInput
                 value={form.slug}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, slug: event.target.value }))
+                  setForm((current) => ({
+                    ...current,
+                    slug: event.target.value,
+                  }))
                 }
                 placeholder="nordic-aluminium"
               />
             </AdminLabel>
 
-            <AdminLabel label="Description">
+            <AdminLabel label="Описание">
               <AdminTextarea
                 value={form.description}
                 onChange={(event) =>
@@ -232,11 +246,11 @@ export default function BrandsManager() {
                     description: event.target.value,
                   }))
                 }
-                placeholder="Short brand description"
+                placeholder="Краткое описание бренда"
               />
             </AdminLabel>
 
-            <AdminLabel label="Image">
+            <AdminLabel label="Изображение">
               <AdminImagePicker
                 value={form.imageLines}
                 pendingFiles={pendingImages}
@@ -247,7 +261,7 @@ export default function BrandsManager() {
                     imageLines: value,
                   }))
                 }
-                placeholder="/uploads/brand.webp|0"
+                placeholder="/uploads/brand-nordic.webp|0"
               />
             </AdminLabel>
           </div>
@@ -265,7 +279,11 @@ export default function BrandsManager() {
               disabled={isPending}
               className="rounded-[16px] bg-[#173523] px-5 py-3 text-[15px] font-bold text-white transition hover:bg-[#214a31] disabled:opacity-60"
             >
-              {isPending ? "Saving..." : selectedBrand ? "Update" : "Create"}
+              {isPending
+                ? "Сохранение..."
+                : selectedBrand
+                  ? "Обновить"
+                  : "Создать"}
             </button>
 
             {selectedBrand ? (
@@ -275,7 +293,7 @@ export default function BrandsManager() {
                 disabled={isPending}
                 className="rounded-[16px] border border-[#e6c6c6] bg-[#fff6f6] px-5 py-3 text-[15px] font-bold text-[#9a3939] transition hover:bg-[#fff0f0] disabled:opacity-60"
               >
-                Delete
+                Удалить
               </button>
             ) : null}
           </div>

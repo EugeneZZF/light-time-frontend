@@ -18,12 +18,19 @@ export type AdminCategoryRef = {
   name: string;
 };
 
+export type AdminBrandRef = {
+  id: number;
+  name: string;
+  slug?: string;
+};
+
 export type AdminProductImage = {
   sortOrder: number;
   url: string;
 };
 
 export type AdminProduct = {
+  brand?: AdminBrandRef | null;
   categories: {
     main: AdminCategoryRef | null;
     subA: AdminCategoryRef | null;
@@ -69,7 +76,7 @@ export type AdminNewsItem = {
   updatedAt?: string;
 };
 
-export type AdminPageItem = {
+export type AdminArticleItem = {
   content: string;
   createdAt?: string;
   id: number;
@@ -98,6 +105,7 @@ export type AdminProjectEquipment = {
 export type AdminProject = {
   content: string;
   createdAt?: string;
+  description?: string | null;
   equipment: AdminProjectEquipment[];
   id: number;
   images: AdminProjectImage[];

@@ -3,8 +3,8 @@ import ContentManager from "@/features/admin/ui/ContentManager";
 export default function AdminNewsPage() {
   return (
     <ContentManager
-      title="News"
-      description="Create, update and remove news items while keeping publication dates under control."
+      title="Новости"
+      description="Создавайте, обновляйте и удаляйте новости, сохраняя контроль над датами публикации."
       resourcePath="news"
       includePublishedAt
     />

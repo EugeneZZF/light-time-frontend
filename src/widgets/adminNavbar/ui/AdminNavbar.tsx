@@ -11,7 +11,7 @@ export default function AdminNavbar({ email }: AdminNavbarProps) {
         <div className="flex flex-col gap-3">
           <div>
             <p className="text-[13px] uppercase tracking-[0.22em] text-[#67816c]">
-              Admin Panel
+              Панель администратора
             </p>
             <h1 className="mt-2 text-[28px] font-bold leading-none text-[#163d20]">
               Light Time
@@ -22,7 +22,7 @@ export default function AdminNavbar({ email }: AdminNavbarProps) {
         </div>
 
         <div className="flex flex-col items-start gap-3 rounded-[18px] border border-[#d9e5dc] bg-white/75 px-4 py-4 md:items-end">
-          <div className="text-[14px] text-[#57715d]">Signed in as</div>
+          <div className="text-[14px] text-[#57715d]">Вы вошли как</div>
           <div className="text-[16px] font-bold text-[#1a4024]">{email}</div>
 
           <form action="/api/admin/auth/logout" method="post">
@@ -30,7 +30,7 @@ export default function AdminNavbar({ email }: AdminNavbarProps) {
               type="submit"
               className="rounded-[12px] bg-[#143f20] px-4 py-2 text-[15px] font-bold text-white transition hover:bg-[#1b572c]"
             >
-              Sign out
+              Выйти
             </button>
           </form>
         </div>

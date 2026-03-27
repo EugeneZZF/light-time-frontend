@@ -1,15 +1,15 @@
 "use client";
 
 import { adminRequest } from "@/features/admin/api/client";
+import { formatAdminDate } from "@/features/admin/lib/utils";
 import {
   AdminBrand,
   AdminCategory,
   AdminNewsItem,
-  AdminPageItem,
+  AdminArticleItem,
   AdminProduct,
   AdminProject,
 } from "@/features/admin/model/types";
-import { formatAdminDate } from "@/features/admin/lib/utils";
 import { useEffect, useState } from "react";
 import AdminPageHeader from "./AdminPageHeader";
 import AdminStatCard from "./AdminStatCard";
@@ -19,9 +19,15 @@ type DashboardState = {
   brands: AdminBrand[];
   categories: AdminCategory[];
   news: AdminNewsItem[];
-  pages: AdminPageItem[];
+  articles: AdminArticleItem[];
   products: AdminProduct[];
   projects: AdminProject[];
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  ARCHIVED: "Архив",
+  DRAFT: "Черновик",
+  PUBLISHED: "Опубликовано",
 };
 
 export default function AdminDashboard() {
@@ -31,22 +37,22 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const [products, categories, brands, news, projects, pages] =
+        const [products, categories, brands, news, projects, articles] =
           await Promise.all([
             adminRequest<AdminProduct[]>("products"),
             adminRequest<AdminCategory[]>("categories"),
             adminRequest<AdminBrand[]>("brands"),
             adminRequest<AdminNewsItem[]>("news"),
             adminRequest<AdminProject[]>("projects"),
-            adminRequest<AdminPageItem[]>("pages"),
+            adminRequest<AdminArticleItem[]>("articles"),
           ]);
 
-        setData({ brands, categories, news, pages, products, projects });
+        setData({ brands, categories, news, articles, products, projects });
       } catch (loadError) {
         setError(
           loadError instanceof Error
             ? loadError.message
-            : "Failed to load dashboard data.",
+            : "Не удалось загрузить данные панели.",
         );
       }
     }
@@ -57,8 +63,8 @@ export default function AdminDashboard() {
   return (
     <>
       <AdminPageHeader
-        title="Overview"
-        description="A single place to keep an eye on catalog entities, content volume, and the latest admin-managed records."
+        title="Обзор"
+        description="Единое место для контроля каталога, контента и последних записей, которыми управляет админка."
       />
 
       {error ? (
@@ -68,36 +74,38 @@ export default function AdminDashboard() {
       ) : null}
 
       {!data ? (
-        <AdminSurface>Loading dashboard...</AdminSurface>
+        <AdminSurface>Загрузка панели...</AdminSurface>
       ) : (
         <div className="flex flex-col gap-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <AdminStatCard
-              title="Products"
+              title="Товары"
               value={data.products.length}
-              hint="Catalog positions available for editing"
+              hint="Позиции каталога, доступные для редактирования"
             />
             <AdminStatCard
-              title="Categories"
+              title="Категории"
               value={data.categories.length}
-              hint="Total category nodes in the admin list"
+              hint="Общее количество узлов в дереве категорий"
             />
             <AdminStatCard
-              title="Brands"
+              title="Бренды"
               value={data.brands.length}
-              hint="Connected brands available in catalog"
+              hint="Подключённые бренды, доступные в каталоге"
             />
             <AdminStatCard
-              title="Content"
-              value={data.news.length + data.pages.length + data.projects.length}
-              hint="News, pages and project entries combined"
+              title="Контент"
+              value={
+                data.news.length + data.articles.length + data.projects.length
+              }
+              hint="Новости, статьи и проекты вместе"
             />
           </div>
 
           <div className="grid gap-6 xl:grid-cols-3">
             <AdminSurface>
               <div className="text-[20px] font-bold text-[#173523]">
-                Latest products
+                Последние товары
               </div>
               <div className="mt-4 flex flex-col gap-3">
                 {data.products.slice(0, 5).map((product) => (
@@ -109,10 +117,10 @@ export default function AdminDashboard() {
                       {product.title}
                     </div>
                     <div className="mt-1 text-[13px] text-[#617765]">
-                      {product.sku || "No SKU"} • {product.price} ₽
+                      {product.sku || "Без SKU"} • {product.price} ₽
                     </div>
                     <div className="mt-2 text-[12px] text-[#7b8e7f]">
-                      Updated {formatAdminDate(product.updatedAt)}
+                      Обновлено {formatAdminDate(product.updatedAt)}
                     </div>
                   </div>
                 ))}
@@ -121,7 +129,7 @@ export default function AdminDashboard() {
 
             <AdminSurface>
               <div className="text-[20px] font-bold text-[#173523]">
-                Latest categories
+                Последние категории
               </div>
               <div className="mt-4 flex flex-col gap-3">
                 {data.categories.slice(0, 5).map((category) => (
@@ -136,7 +144,7 @@ export default function AdminDashboard() {
                       {category.slug}
                     </div>
                     <div className="mt-2 text-[12px] text-[#7b8e7f]">
-                      Updated {formatAdminDate(category.updatedAt)}
+                      Обновлено {formatAdminDate(category.updatedAt)}
                     </div>
                   </div>
                 ))}
@@ -145,27 +153,25 @@ export default function AdminDashboard() {
 
             <AdminSurface>
               <div className="text-[20px] font-bold text-[#173523]">
-                Latest content
+                Последний контент
               </div>
               <div className="mt-4 flex flex-col gap-3">
-                {[...data.news, ...data.pages]
-                  .slice(0, 5)
-                  .map((item) => (
-                    <div
-                      key={`${item.slug}-${item.id}`}
-                      className="rounded-[18px] border border-[#e4ece5] bg-[#f8fbf9] p-4"
-                    >
-                      <div className="text-[16px] font-bold text-[#173523]">
-                        {item.title}
-                      </div>
-                      <div className="mt-1 text-[13px] text-[#617765]">
-                        {item.status}
-                      </div>
-                      <div className="mt-2 text-[12px] text-[#7b8e7f]">
-                        Updated {formatAdminDate(item.updatedAt)}
-                      </div>
+                {[...data.news, ...data.articles].slice(0, 5).map((item) => (
+                  <div
+                    key={`${item.slug}-${item.id}`}
+                    className="rounded-[18px] border border-[#e4ece5] bg-[#f8fbf9] p-4"
+                  >
+                    <div className="text-[16px] font-bold text-[#173523]">
+                      {item.title}
                     </div>
-                  ))}
+                    <div className="mt-1 text-[13px] text-[#617765]">
+                      {STATUS_LABELS[item.status] ?? item.status}
+                    </div>
+                    <div className="mt-2 text-[12px] text-[#7b8e7f]">
+                      Обновлено {formatAdminDate(item.updatedAt)}
+                    </div>
+                  </div>
+                ))}
               </div>
             </AdminSurface>
           </div>

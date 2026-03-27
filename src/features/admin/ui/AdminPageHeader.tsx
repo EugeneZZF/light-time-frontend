@@ -10,7 +10,7 @@ type AdminPageHeaderProps = {
 export default function AdminPageHeader({
   action,
   description,
-  eyebrow = "Admin workspace",
+  eyebrow = "Панель администратора",
   title,
 }: AdminPageHeaderProps) {
   return (

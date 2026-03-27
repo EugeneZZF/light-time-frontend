@@ -11,7 +11,7 @@ export default function AdminSidebar({ email }: AdminSidebarProps) {
         <div className="text-[12px] uppercase tracking-[0.22em] text-[#b9cfbf]">
           Light Time
         </div>
-        <div className="mt-3 text-[28px] font-bold leading-none">Admin</div>
+        <div className="mt-3 text-[28px] font-bold leading-none">Админка</div>
         <div className="mt-4 text-[13px] text-[#d8e7dc]">{email}</div>
       </div>
 
@@ -22,7 +22,7 @@ export default function AdminSidebar({ email }: AdminSidebarProps) {
           type="submit"
           className="w-full rounded-[16px] border border-[#d9e3db] bg-white px-4 py-3 text-[15px] font-bold text-[#173523] transition hover:border-[#9bb9a2] hover:bg-[#f7fbf8]"
         >
-          Sign out
+          Выйти
         </button>
       </form>
     </aside>

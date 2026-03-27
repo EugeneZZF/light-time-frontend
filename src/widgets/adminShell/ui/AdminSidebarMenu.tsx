@@ -12,38 +12,38 @@ type AdminMenuItem = {
 const adminMenuItems: AdminMenuItem[] = [
   {
     href: "/admin",
-    label: "Overview",
-    description: "Dashboard and quick stats",
+    label: "Обзор",
+    description: "Панель и быстрая статистика",
   },
   {
     href: "/admin/products",
-    label: "Products",
-    description: "Catalog items and pricing",
+    label: "Товары",
+    description: "Позиции каталога и цены",
   },
   {
     href: "/admin/categories",
-    label: "Categories",
-    description: "Main, sub A and sub B tree",
+    label: "Категории",
+    description: "Основные и вложенные категории",
   },
   {
     href: "/admin/brands",
-    label: "Brands",
-    description: "Brand directory",
+    label: "Бренды",
+    description: "Справочник брендов",
   },
   {
     href: "/admin/news",
-    label: "News",
-    description: "Published news and drafts",
+    label: "Новости",
+    description: "Опубликованные новости и черновики",
   },
   {
     href: "/admin/projects",
-    label: "Projects",
-    description: "Portfolio and equipment",
+    label: "Проекты",
+    description: "Портфолио и оборудование",
   },
   {
-    href: "/admin/pages",
-    label: "Pages",
-    description: "Static content pages",
+    href: "/admin/articles",
+    label: "Статьи",
+    description: "Статические статьи сайта",
   },
 ];
 

@@ -3,22 +3,26 @@
 import { animated, useSpring } from "@react-spring/web";
 import { Category } from "@/entities/category/model/types";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 interface SideBarLinkProps {
+  activeCategorySlug: string | null;
   category: Category;
 }
 
-export default function SideBarLink({ category }: SideBarLinkProps) {
-  const pathname = usePathname();
+export default function SideBarLink({
+  activeCategorySlug,
+  category,
+}: SideBarLinkProps) {
   const searchParams = useSearchParams();
-  const activeCategorySlug = searchParams.get("categorySlug");
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
 
-  const subcategories =
-    category.subcategoriesA ?? category.SubcategoriesA ?? [];
+  const subcategories = useMemo(
+    () => category.subcategoriesA ?? category.SubcategoriesA ?? [],
+    [category.SubcategoriesA, category.subcategoriesA],
+  );
   const hasSubcategories = subcategories.length > 0;
   const isSubcategoryActive = subcategories.some(
     (subcategory) => subcategory.slug === activeCategorySlug,
@@ -67,7 +71,7 @@ export default function SideBarLink({ category }: SideBarLinkProps) {
     nextParams.set("categorySlug", category.slug);
   }
 
-  const categoryHref = `${pathname}${nextParams.toString() ? `?${nextParams.toString()}` : ""}`;
+  const categoryHref = `/catalog${nextParams.toString() ? `?${nextParams.toString()}` : ""}`;
 
   return (
     <div className="mb-2">

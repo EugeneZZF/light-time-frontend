@@ -2,13 +2,15 @@
 
 import { adminRequest, adminUploadFile } from "@/features/admin/api/client";
 import { baseUrl } from "@/entities/category/api/getCategoryes";
-import { AdminCategory, AdminProduct } from "@/features/admin/model/types";
+import {
+  AdminBrand,
+  AdminCategory,
+  AdminProduct,
+} from "@/features/admin/model/types";
 import {
   findCategoryNameById,
   parseImageLines,
-  parseJsonText,
   serializeImages,
-  stringifyPretty,
 } from "@/features/admin/lib/utils";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
@@ -21,7 +23,81 @@ import AdminImagePicker from "./AdminImagePicker";
 import AdminPageHeader from "./AdminPageHeader";
 import AdminSurface from "./AdminSurface";
 
+const SPECIFICATION_TYPE_OPTIONS = [
+  {
+    value: "Recessed luminaires",
+    label: "Встраиваемые светильники",
+  },
+  {
+    value: "Track luminaires",
+    label: "Трековые светильники",
+  },
+  {
+    value: "Modular luminaires",
+    label: "Модульные светильники",
+  },
+  {
+    value: "Wall-ceiling luminaires",
+    label: "Настенно-потолочные светильники",
+  },
+  {
+    value: "Linear fluorescent luminaires",
+    label: "Люминесцентные светильники линейные",
+  },
+  {
+    value: "Suspended luminaires",
+    label: "Подвесные светильники",
+  },
+  {
+    value: "Linear LED luminaires",
+    label: "Светодиодные светильники линейные",
+  },
+  {
+    value: "Information displays",
+    label: "Информационные табло",
+  },
+] as const;
+
+const CONTROLLED_SPECIFICATION_KEYS = [
+  "type",
+  "power",
+  "luminous",
+  "size",
+  "baseType",
+  "protectionDegree",
+  "materials",
+  "lightSourceType",
+  "reflectorType",
+  "packaging",
+  "quantity",
+] as const;
+
+const NUMERIC_SPECIFICATION_KEYS = ["power", "luminous", "quantity"] as const;
+
+const SPECIFICATION_FIELDS = [
+  { key: "type", label: "Тип", inputType: "select" },
+  { key: "power", label: "Мощность", inputType: "number" },
+  { key: "luminous", label: "Световой поток", inputType: "number" },
+  { key: "size", label: "Размер", inputType: "text" },
+  { key: "baseType", label: "Тип цоколя", inputType: "text" },
+  { key: "protectionDegree", label: "Степень защиты", inputType: "text" },
+  { key: "materials", label: "Материалы", inputType: "text" },
+  { key: "lightSourceType", label: "Тип источника света", inputType: "text" },
+  { key: "reflectorType", label: "Тип отражателя", inputType: "text" },
+  { key: "packaging", label: "Упаковка", inputType: "text" },
+  { key: "quantity", label: "Количество", inputType: "number" },
+] as const;
+
+type ControlledSpecificationKey =
+  (typeof CONTROLLED_SPECIFICATION_KEYS)[number];
+
+type SpecificationFieldState = {
+  enabled: boolean;
+  value: string;
+};
+
 type ProductFormState = {
+  brandId: string;
   description: string;
   imageLines: string;
   inStock: boolean;
@@ -31,14 +107,65 @@ type ProductFormState = {
   price: string;
   sku: string;
   slug: string;
-  specificationsText: string;
+  specifications: Record<ControlledSpecificationKey, SpecificationFieldState>;
   subACategoryId: string;
   subBCategoryId: string;
   title: string;
   useDiscount: boolean;
 };
 
+function createEmptySpecifications(): Record<
+  ControlledSpecificationKey,
+  SpecificationFieldState
+> {
+  return Object.fromEntries(
+    CONTROLLED_SPECIFICATION_KEYS.map((key) => [
+      key,
+      { enabled: false, value: "" },
+    ]),
+  ) as Record<ControlledSpecificationKey, SpecificationFieldState>;
+}
+
+function getSpecificationFieldState(
+  specifications: Record<string, unknown>,
+  key: ControlledSpecificationKey,
+): SpecificationFieldState {
+  const value = specifications[key];
+
+  if (value === null || value === undefined) {
+    return { enabled: false, value: "" };
+  }
+
+  return {
+    enabled: true,
+    value: String(value),
+  };
+}
+
+function toSpecificationRequestValue(
+  key: ControlledSpecificationKey,
+  field: SpecificationFieldState,
+) {
+  if (!field.enabled) {
+    return null;
+  }
+
+  if (
+    (NUMERIC_SPECIFICATION_KEYS as readonly string[]).includes(key) &&
+    field.value.trim().length > 0
+  ) {
+    const numericValue = Number(field.value);
+
+    if (Number.isFinite(numericValue)) {
+      return numericValue;
+    }
+  }
+
+  return field.value;
+}
+
 const emptyForm: ProductFormState = {
+  brandId: "",
   description: "",
   imageLines: "",
   inStock: true,
@@ -48,7 +175,7 @@ const emptyForm: ProductFormState = {
   price: "",
   sku: "",
   slug: "",
-  specificationsText: "{}",
+  specifications: createEmptySpecifications(),
   subACategoryId: "",
   subBCategoryId: "",
   title: "",
@@ -56,14 +183,19 @@ const emptyForm: ProductFormState = {
 };
 
 export default function ProductsManager() {
+  const [brands, setBrands] = useState<AdminBrand[]>([]);
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<AdminProduct | null>(
     null,
   );
   const [form, setForm] = useState<ProductFormState>(emptyForm);
+  const [extraSpecifications, setExtraSpecifications] = useState<
+    Record<string, unknown>
+  >({});
   const [pendingImages, setPendingImages] = useState<File[]>([]);
   const [error, setError] = useState("");
+  const [shakenFieldKey, setShakenFieldKey] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const mainCategory = useMemo(
@@ -79,15 +211,23 @@ export default function ProductsManager() {
       (category) => category.id === Number(form.subACategoryId),
     ) ?? null;
   const subBOptions = subACategory?.subcategoriesB ?? [];
+  const activeBrands = useMemo(
+    () => brands.filter((brand) => brand.isActive !== false),
+    [brands],
+  );
+  const selectedBrand =
+    activeBrands.find((brand) => brand.id === Number(form.brandId)) ?? null;
 
   async function loadData() {
-    const [productsResult, categoriesResult] = await Promise.all([
+    const [productsResult, categoriesResult, brandsResult] = await Promise.all([
       adminRequest<AdminProduct[]>("products"),
       adminRequest<AdminCategory[]>("categories/tree"),
+      adminRequest<AdminBrand[]>("brands"),
     ]);
 
     setProducts(productsResult);
     setCategories(categoriesResult);
+    setBrands(brandsResult);
   }
 
   useEffect(() => {
@@ -95,10 +235,12 @@ export default function ProductsManager() {
 
     void (async () => {
       try {
-        const [productsResult, categoriesResult] = await Promise.all([
-          adminRequest<AdminProduct[]>("products"),
-          adminRequest<AdminCategory[]>("categories/tree"),
-        ]);
+        const [productsResult, categoriesResult, brandsResult] =
+          await Promise.all([
+            adminRequest<AdminProduct[]>("products"),
+            adminRequest<AdminCategory[]>("categories/tree"),
+            adminRequest<AdminBrand[]>("brands"),
+          ]);
 
         if (!isMounted) {
           return;
@@ -106,6 +248,7 @@ export default function ProductsManager() {
 
         setProducts(productsResult);
         setCategories(categoriesResult);
+        setBrands(brandsResult);
       } catch (loadError) {
         if (!isMounted) {
           return;
@@ -114,7 +257,7 @@ export default function ProductsManager() {
         setError(
           loadError instanceof Error
             ? loadError.message
-            : "Failed to load products.",
+            : "Не удалось загрузить товары.",
         );
       }
     })();
@@ -126,14 +269,38 @@ export default function ProductsManager() {
 
   function resetForm() {
     setSelectedProduct(null);
-    setForm(emptyForm);
+    setForm({
+      ...emptyForm,
+      specifications: createEmptySpecifications(),
+    });
+    setExtraSpecifications({});
     setPendingImages([]);
     setError("");
   }
 
+  function updateSpecification(
+    key: ControlledSpecificationKey,
+    patch: Partial<SpecificationFieldState>,
+  ) {
+    setForm((current) => ({
+      ...current,
+      specifications: {
+        ...current.specifications,
+        [key]: {
+          ...current.specifications[key],
+          ...patch,
+        },
+      },
+    }));
+  }
+
   function startEdit(product: AdminProduct) {
+    const controlledKeys = new Set<string>(CONTROLLED_SPECIFICATION_KEYS);
+    const productSpecifications = product.specifications ?? {};
+
     setSelectedProduct(product);
     setForm({
+      brandId: product.brand?.id ? String(product.brand.id) : "",
       description: product.description ?? "",
       imageLines: serializeImages(product.img),
       inStock: product.inStock,
@@ -145,7 +312,34 @@ export default function ProductsManager() {
       price: product.price,
       sku: product.sku,
       slug: product.slug,
-      specificationsText: stringifyPretty(product.specifications),
+      specifications: {
+        type: getSpecificationFieldState(productSpecifications, "type"),
+        power: getSpecificationFieldState(productSpecifications, "power"),
+        luminous: getSpecificationFieldState(productSpecifications, "luminous"),
+        size: getSpecificationFieldState(productSpecifications, "size"),
+        baseType: getSpecificationFieldState(productSpecifications, "baseType"),
+        protectionDegree: getSpecificationFieldState(
+          productSpecifications,
+          "protectionDegree",
+        ),
+        materials: getSpecificationFieldState(
+          productSpecifications,
+          "materials",
+        ),
+        lightSourceType: getSpecificationFieldState(
+          productSpecifications,
+          "lightSourceType",
+        ),
+        reflectorType: getSpecificationFieldState(
+          productSpecifications,
+          "reflectorType",
+        ),
+        packaging: getSpecificationFieldState(
+          productSpecifications,
+          "packaging",
+        ),
+        quantity: getSpecificationFieldState(productSpecifications, "quantity"),
+      },
       subACategoryId: product.categories.subA?.id
         ? String(product.categories.subA.id)
         : "",
@@ -155,6 +349,13 @@ export default function ProductsManager() {
       title: product.title,
       useDiscount: product.discount.hasDiscount,
     });
+    setExtraSpecifications(
+      Object.fromEntries(
+        Object.entries(productSpecifications).filter(
+          ([key]) => !controlledKeys.has(key),
+        ),
+      ),
+    );
     setPendingImages([]);
     setError("");
   }
@@ -166,10 +367,15 @@ export default function ProductsManager() {
         const uploadedImages = await Promise.all(
           pendingImages.map((file) => adminUploadFile(file)),
         );
-        const specifications = parseJsonText<Record<string, unknown>>(
-          form.specificationsText,
-          {},
-        );
+        const specifications = {
+          ...extraSpecifications,
+          ...Object.fromEntries(
+            CONTROLLED_SPECIFICATION_KEYS.map((key) => [
+              key,
+              toSpecificationRequestValue(key, form.specifications[key]),
+            ]),
+          ),
+        };
         const mainCategoryRef = findCategoryNameById(
           categories,
           form.mainCategoryId ? Number(form.mainCategoryId) : null,
@@ -182,6 +388,9 @@ export default function ProductsManager() {
           categories,
           form.subBCategoryId ? Number(form.subBCategoryId) : null,
         );
+        const brandRef =
+          activeBrands.find((brand) => brand.id === Number(form.brandId)) ??
+          null;
 
         const body = {
           title: form.title,
@@ -211,6 +420,13 @@ export default function ProductsManager() {
               ? { id: subBCategoryRef.id, name: subBCategoryRef.name }
               : null,
           },
+          brand: brandRef
+            ? {
+                id: brandRef.id,
+                name: brandRef.name,
+                slug: brandRef.slug,
+              }
+            : null,
           slug: form.slug,
           sku: form.sku,
           isActive: form.isActive,
@@ -234,7 +450,7 @@ export default function ProductsManager() {
         setError(
           submitError instanceof Error
             ? submitError.message
-            : "Failed to save product.",
+            : "Не удалось сохранить товар.",
         );
       }
     });
@@ -256,7 +472,7 @@ export default function ProductsManager() {
         setError(
           deleteError instanceof Error
             ? deleteError.message
-            : "Failed to delete product.",
+            : "Не удалось удалить товар.",
         );
       }
     });
@@ -265,15 +481,15 @@ export default function ProductsManager() {
   return (
     <>
       <AdminPageHeader
-        title="Products"
-        description="Create catalog products, control category placement, pricing, stock and specifications from one editing panel."
+        title="Товары"
+        description="Создавайте товары каталога и управляйте категориями, ценами, наличием, брендом и характеристиками из одной панели."
         action={
           <button
             type="button"
             onClick={resetForm}
             className="rounded-[16px] bg-[#173523] px-5 py-3 text-[15px] font-bold text-white transition hover:bg-[#214a31]"
           >
-            New product
+            Новый товар
           </button>
         }
       />
@@ -285,10 +501,7 @@ export default function ProductsManager() {
               <button
                 key={product.id}
                 type="button"
-                onClick={() => {
-                  startEdit(product);
-                  console.log(product, baseUrl);
-                }}
+                onClick={() => startEdit(product)}
                 className="grid gap-4 rounded-[22px] border border-[#dfe8e1] bg-[#f9fcfa] p-4 text-left transition hover:border-[#a3bcaa] md:grid-cols-[92px_minmax(0,1fr)]"
               >
                 <div
@@ -305,11 +518,11 @@ export default function ProductsManager() {
                       {product.title}
                     </div>
                     <div className="rounded-full border border-[#d7e1d9] bg-white px-3 py-1 text-[11px] font-bold text-[#516556]">
-                      {product.isActive ? "ACTIVE" : "HIDDEN"}
+                      {product.isActive ? "АКТИВЕН" : "СКРЫТ"}
                     </div>
                   </div>
                   <div className="mt-1 text-[13px] text-[#607566]">
-                    {product.sku || "No SKU"} • {product.slug}
+                    {product.sku || "Без SKU"} • {product.slug}
                   </div>
                   <div className="mt-2 text-[14px] text-[#506657]">
                     {product.price} ₽
@@ -318,7 +531,10 @@ export default function ProductsManager() {
                       : ""}
                   </div>
                   <div className="mt-2 text-[13px] text-[#6c8170]">
-                    {product.categories.main?.name ?? "No main category"}
+                    {product.categories.main?.name ?? "Без основной категории"}
+                  </div>
+                  <div className="mt-1 text-[12px] text-[#839686]">
+                    {product.brand?.name ?? "Без бренда"}
                   </div>
                 </div>
               </button>
@@ -328,11 +544,11 @@ export default function ProductsManager() {
 
         <AdminSurface>
           <div className="text-[22px] font-bold text-[#173523]">
-            {selectedProduct ? "Edit product" : "Create product"}
+            {selectedProduct ? "Редактировать товар" : "Создать товар"}
           </div>
 
           <div className="mt-5 flex flex-col gap-4">
-            <AdminLabel label="Title">
+            <AdminLabel label="Название">
               <AdminInput
                 value={form.title}
                 onChange={(event) =>
@@ -371,7 +587,15 @@ export default function ProductsManager() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <AdminLabel label="Price">
+              <AdminLabel label="Бренд">
+                <AdminInput
+                  value={selectedBrand?.name ?? ""}
+                  readOnly
+                  placeholder="Выберите бренд ниже"
+                />
+              </AdminLabel>
+
+              <AdminLabel label="Цена">
                 <AdminInput
                   value={form.price}
                   onChange={(event) =>
@@ -383,7 +607,7 @@ export default function ProductsManager() {
                 />
               </AdminLabel>
 
-              <AdminLabel label="Discount price">
+              <AdminLabel label="Цена со скидкой">
                 <AdminInput
                   value={form.newPrice}
                   onChange={(event) =>
@@ -392,10 +616,147 @@ export default function ProductsManager() {
                       newPrice: event.target.value,
                     }))
                   }
-                  placeholder="Optional"
+                  placeholder="Необязательно"
                 />
               </AdminLabel>
             </div>
+
+            <AdminLabel label="Выбранный бренд">
+              {selectedBrand ? (
+                <div className="grid gap-3 rounded-[20px] border border-[#cfe0d3] bg-[#f6fbf7] p-3 md:grid-cols-[72px_minmax(0,1fr)]">
+                  <div
+                    className="h-[72px] rounded-[16px] bg-[#e8f0ea] bg-cover bg-center"
+                    style={{
+                      backgroundImage: selectedBrand.imageUrl
+                        ? `url(${baseUrl}${selectedBrand.imageUrl})`
+                        : undefined,
+                    }}
+                  />
+                  <div className="min-w-0">
+                    <div className="truncate text-[15px] font-bold text-[#173523]">
+                      {selectedBrand.name}
+                    </div>
+                    <div className="mt-1 text-[12px] text-[#607566]">
+                      {selectedBrand.slug}
+                    </div>
+                    <div className="mt-2 line-clamp-2 text-[13px] text-[#6c8170]">
+                      {selectedBrand.description || "Нет описания"}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((current) => ({
+                          ...current,
+                          brandId: "",
+                        }))
+                      }
+                      className="mt-3 rounded-[12px] border border-[#e5c7c7] bg-white px-3 py-2 text-[12px] font-bold text-[#933d3d] transition hover:bg-[#fff5f5]"
+                    >
+                      Убрать
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-[18px] border border-dashed border-[#cdd9cf] bg-[#fafcfb] px-4 py-5 text-[14px] text-[#6d8070]">
+                  Бренд не выбран
+                </div>
+              )}
+            </AdminLabel>
+
+            <details className="group rounded-[20px] border border-[#dfe8e1] bg-[#f9fcfa]">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4">
+                <div>
+                  <div className="text-[14px] font-bold text-[#173523]">
+                    Выбрать активный бренд
+                  </div>
+                  <div className="mt-1 text-[12px] text-[#607566]">
+                    {selectedBrand
+                      ? `Выбрано: ${selectedBrand.name}`
+                      : "Бренд не выбран"}
+                  </div>
+                </div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#607566] transition group-open:rotate-180">
+                  ^
+                </div>
+              </summary>
+
+              <div className="border-t border-[#e3ece5] px-4 py-4">
+                <div className="grid max-h-[320px] gap-3 overflow-y-auto pr-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((current) => ({
+                        ...current,
+                        brandId: "",
+                      }))
+                    }
+                    className={`rounded-[18px] border px-4 py-3 text-left transition ${
+                      !form.brandId
+                        ? "border-[#2e7644] bg-[#f3fbf5] shadow-[0_10px_24px_rgba(46,118,68,0.10)]"
+                        : "border-[#dfe8e1] bg-white hover:border-[#a3bcaa]"
+                    }`}
+                  >
+                    <div className="text-[14px] font-bold text-[#173523]">
+                      Без бренда
+                    </div>
+                    <div className="mt-1 text-[12px] text-[#607566]">
+                      Товар будет сохранён без привязанного бренда
+                    </div>
+                  </button>
+
+                  {activeBrands.map((brand) => {
+                    const isSelected = form.brandId === String(brand.id);
+
+                    return (
+                      <button
+                        key={brand.id}
+                        type="button"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            brandId: String(brand.id),
+                          }))
+                        }
+                        className={`grid gap-3 rounded-[20px] border p-3 text-left transition md:grid-cols-[72px_minmax(0,1fr)_auto] ${
+                          isSelected
+                            ? "border-[#2e7644] bg-[#f3fbf5] shadow-[0_10px_24px_rgba(46,118,68,0.10)]"
+                            : "border-[#dfe8e1] bg-white hover:border-[#a3bcaa]"
+                        }`}
+                      >
+                        <div
+                          className="h-[72px] rounded-[16px] bg-[#eef4ef] bg-cover bg-center"
+                          style={{
+                            backgroundImage: brand.imageUrl
+                              ? `url(${baseUrl}${brand.imageUrl})`
+                              : undefined,
+                          }}
+                        />
+                        <div className="min-w-0">
+                          <div className="truncate text-[15px] font-bold text-[#173523]">
+                            {brand.name}
+                          </div>
+                          <div className="mt-1 text-[12px] text-[#607566]">
+                            {brand.slug}
+                          </div>
+                          <div className="mt-2 line-clamp-2 text-[13px] text-[#6c8170]">
+                            {brand.description || "Нет описания"}
+                          </div>
+                        </div>
+                        <div
+                          className={`self-center rounded-full px-3 py-1 text-[11px] font-bold ${
+                            isSelected
+                              ? "bg-[#1f6d39] text-white"
+                              : "border border-[#d7e1d9] bg-white text-[#516556]"
+                          }`}
+                        >
+                          {isSelected ? "Выбрано" : "Выбрать"}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </details>
 
             <div className="grid gap-3 md:grid-cols-3">
               <label className="flex items-center gap-3 rounded-[16px] border border-[#dbe5dd] bg-[#f8fbf9] px-4 py-3">
@@ -410,7 +771,7 @@ export default function ProductsManager() {
                   }
                 />
                 <span className="text-[14px] font-bold text-[#23402b]">
-                  In stock
+                  В наличии
                 </span>
               </label>
 
@@ -426,7 +787,7 @@ export default function ProductsManager() {
                   }
                 />
                 <span className="text-[14px] font-bold text-[#23402b]">
-                  Active
+                  Активен
                 </span>
               </label>
 
@@ -442,13 +803,13 @@ export default function ProductsManager() {
                   }
                 />
                 <span className="text-[14px] font-bold text-[#23402b]">
-                  Discount
+                  Скидка
                 </span>
               </label>
             </div>
 
             <div className="grid gap-4">
-              <AdminLabel label="Main category">
+              <AdminLabel label="Основная категория">
                 <AdminSelect
                   value={form.mainCategoryId}
                   onChange={(event) =>
@@ -460,7 +821,7 @@ export default function ProductsManager() {
                     }))
                   }
                 >
-                  <option value="">Select main category</option>
+                  <option value="">Выберите основную категорию</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -469,7 +830,7 @@ export default function ProductsManager() {
                 </AdminSelect>
               </AdminLabel>
 
-              <AdminLabel label="Subcategory A">
+              <AdminLabel label="Подкатегория A">
                 <AdminSelect
                   value={form.subACategoryId}
                   onChange={(event) =>
@@ -480,7 +841,7 @@ export default function ProductsManager() {
                     }))
                   }
                 >
-                  <option value="">Optional</option>
+                  <option value="">Необязательно</option>
                   {subAOptions.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -489,7 +850,7 @@ export default function ProductsManager() {
                 </AdminSelect>
               </AdminLabel>
 
-              <AdminLabel label="Subcategory B">
+              <AdminLabel label="Подкатегория B">
                 <AdminSelect
                   value={form.subBCategoryId}
                   onChange={(event) =>
@@ -499,7 +860,7 @@ export default function ProductsManager() {
                     }))
                   }
                 >
-                  <option value="">Optional</option>
+                  <option value="">Необязательно</option>
                   {subBOptions.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -509,7 +870,7 @@ export default function ProductsManager() {
               </AdminLabel>
             </div>
 
-            <AdminLabel label="Description">
+            <AdminLabel label="Описание">
               <AdminTextarea
                 value={form.description}
                 onChange={(event) =>
@@ -521,7 +882,7 @@ export default function ProductsManager() {
               />
             </AdminLabel>
 
-            <AdminLabel label="Images">
+            <AdminLabel label="Изображения">
               <AdminImagePicker
                 value={form.imageLines}
                 pendingFiles={pendingImages}
@@ -536,18 +897,91 @@ export default function ProductsManager() {
               />
             </AdminLabel>
 
-            <AdminLabel label="Specifications JSON">
-              <AdminTextarea
-                value={form.specificationsText}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    specificationsText: event.target.value,
-                  }))
-                }
-                className="min-h-[180px] font-mono text-[13px]"
-              />
-            </AdminLabel>
+            <div className="flex flex-col gap-2">
+              <span className="text-[14px] font-bold text-[#23402b]">
+                Характеристики
+              </span>
+              <div className="grid gap-4 md:grid-cols-2">
+                {SPECIFICATION_FIELDS.map((field) => {
+                  const fieldState = form.specifications[field.key];
+
+                  return (
+                    <div
+                      key={field.key}
+                      className="rounded-[16px] border border-[#dbe5dd] bg-[#f8fbf9] p-[10px]"
+                    >
+                      <label className="mb-3 flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={fieldState.enabled}
+                          onChange={(event) =>
+                            updateSpecification(field.key, {
+                              enabled: event.target.checked,
+                            })
+                          }
+                        />
+                        <span className="text-[14px] font-bold text-[#23402b]">
+                          {field.label}
+                        </span>
+                      </label>
+
+                      <div
+                        className={`${
+                          !fieldState.enabled ? "opacity-50" : ""
+                        } ${
+                          shakenFieldKey === field.key
+                            ? "border border-red-500"
+                            : "border border-transparent"
+                        }`}
+                        onClick={
+                          !fieldState.enabled
+                            ? () => {
+                                setShakenFieldKey(field.key);
+                                setTimeout(() => setShakenFieldKey(null), 500);
+                              }
+                            : undefined
+                        }
+                      >
+                        {field.inputType === "select" ? (
+                          <AdminSelect
+                            className="border-0"
+                            value={fieldState.value}
+                            disabled={!fieldState.enabled}
+                            onChange={(event) =>
+                              updateSpecification(field.key, {
+                                value: event.target.value,
+                              })
+                            }
+                          >
+                            <option value="">Выберите</option>
+                            {SPECIFICATION_TYPE_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </AdminSelect>
+                        ) : (
+                          <AdminInput
+                            className="border-0"
+                            type={field.inputType}
+                            value={fieldState.value}
+                            disabled={!fieldState.enabled}
+                            onChange={(event) =>
+                              updateSpecification(field.key, {
+                                value: event.target.value,
+                              })
+                            }
+                          />
+                        )}
+                        {shakenFieldKey === field.key && (
+                          <span className="animate-shake sr-only">error</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {error ? (
@@ -563,7 +997,11 @@ export default function ProductsManager() {
               disabled={isPending}
               className="rounded-[16px] bg-[#173523] px-5 py-3 text-[15px] font-bold text-white transition hover:bg-[#214a31] disabled:opacity-60"
             >
-              {isPending ? "Saving..." : selectedProduct ? "Update" : "Create"}
+              {isPending
+                ? "Сохранение..."
+                : selectedProduct
+                  ? "Обновить"
+                  : "Создать"}
             </button>
 
             {selectedProduct ? (
@@ -573,7 +1011,7 @@ export default function ProductsManager() {
                 disabled={isPending}
                 className="rounded-[16px] border border-[#e6c6c6] bg-[#fff6f6] px-5 py-3 text-[15px] font-bold text-[#9a3939] transition hover:bg-[#fff0f0] disabled:opacity-60"
               >
-                Delete
+                Удалить
               </button>
             ) : null}
           </div>
