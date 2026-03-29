@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { animated, useSpring } from "@react-spring/web";
+import Link from "next/link";
 import { Category } from "../model/types";
 
 interface CategoryCardProps {
@@ -49,31 +50,44 @@ export default function CategoryCard({
     },
   });
 
+  const subcategories = category.subcategoriesA ?? category.SubcategoriesA ?? [];
+
   return (
     <div className="h-auto w-[243px] ">
-      <img
-        src={`./category/${category.slug}.jpg`}
-        alt={category.name}
-        className="w-full h-[100px] border border-[#E8E8E8] shadow-[0_6px_5px_-5px_rgba(0,0,0,0.15)]"
-      />
-      <p className=" mt-[10px] cursor-pointer pl-[19px] pr-[19px]  hover:text-[#ff3333] text-[18px] text-[#009e39] font-bold underline decoration-1 decoration-[#009e3933]">
+      <Link href={`/catalog?categorySlug=${category.slug}`} className="block">
+        <img
+          src={`./category/${category.slug}.jpg`}
+          alt={category.name}
+          className="w-full h-[100px] border border-[#E8E8E8] shadow-[0_6px_5px_-5px_rgba(0,0,0,0.15)]"
+        />
+      </Link>
+      <Link
+        href={`/catalog?categorySlug=${category.slug}`}
+        className="mt-[10px] block pl-[19px] pr-[19px] text-[18px] font-bold text-[#009e39] underline decoration-1 decoration-[#009e3933] hover:text-[#ff3333]"
+      >
         {category.name}
-      </p>
+      </Link>
       <animated.div style={{ ...animatedStyles, overflow: "hidden" }}>
         <div ref={contentRef}>
-          {category.subcategoriesA?.map((subCat) => (
+          {subcategories.map((subCat) => (
             <div
               key={subCat.id}
               className=" underline  mt-[5px] decoration-1 underline-offset-3 decoration-[rgba(0,0,0,0.15)] inline cursor-pointer text-[15px]"
             >
-              <p className="cursor-pointer pl-[19px] pr-[19px]  hover:text-[#ff3333]">
+              <Link
+                href={`/catalog?categorySlug=${subCat.slug}`}
+                className="block cursor-pointer pl-[19px] pr-[19px] hover:text-[#ff3333]"
+              >
                 {subCat.name}
-              </p>
-              {subCat.subcategoriesB?.map((subSubCat) => (
+              </Link>
+              {(subCat.subcategoriesB ?? subCat.SubcategoriesB ?? []).map((subSubCat) => (
                 <div key={subSubCat.id}>
-                  <p className="ml-[20px] pl-[19px] pr-[19px] cursor-pointer hover:text-[#ff3333]">
+                  <Link
+                    href={`/catalog?categorySlug=${subSubCat.slug}`}
+                    className="ml-[20px] block pl-[19px] pr-[19px] hover:text-[#ff3333]"
+                  >
                     {subSubCat.name}
-                  </p>
+                  </Link>
                 </div>
               ))}
             </div>

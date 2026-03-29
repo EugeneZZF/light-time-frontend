@@ -114,3 +114,26 @@ export type AdminProject = {
   title: string;
   updatedAt?: string;
 };
+
+export type AdminOrderItem = {
+  id: number;
+  orderId: number;
+  price: string;
+  productId: number;
+  productName: string;
+  quantity: number;
+};
+
+export type AdminOrder = {
+  comment: string | null;
+  createdAt?: string;
+  customer: string;
+  email: string;
+  id: number;
+  items: AdminOrderItem[];
+  orderNumber: string;
+  phone: string;
+  status: string;
+  total: string;
+  updatedAt?: string;
+};

@@ -587,13 +587,13 @@ export default function ProductsManager() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <AdminLabel label="Бренд">
+              {/* <AdminLabel label="Бренд">
                 <AdminInput
                   value={selectedBrand?.name ?? ""}
                   readOnly
                   placeholder="Выберите бренд ниже"
                 />
-              </AdminLabel>
+              </AdminLabel> */}
 
               <AdminLabel label="Цена">
                 <AdminInput

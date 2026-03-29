@@ -1,24 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import { addCartItem } from "@/shared/lib/cart/localStorage";
 
 interface ProductPurchasePanelProps {
+  productId: string;
   inStock: boolean;
   price: string;
 }
 
 export default function ProductPurchasePanel({
+  productId,
   inStock,
   price,
 }: ProductPurchasePanelProps) {
   const [quantity, setQuantity] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
 
   const increment = () => {
     setQuantity((current) => current + 1);
+    setIsAdded(false);
   };
 
   const decrement = () => {
     setQuantity((current) => Math.max(1, current - 1));
+    setIsAdded(false);
+  };
+
+  const handleAddToCart = () => {
+    addCartItem(productId, quantity);
+    setIsAdded(true);
   };
 
   return (
@@ -62,6 +73,7 @@ export default function ProductPurchasePanel({
           </div>
           <button
             type="button"
+            onClick={handleAddToCart}
             aria-label="Add to cart"
             className="ml-[8px] flex h-[36px] w-[36px] items-center justify-center"
           >
@@ -70,10 +82,14 @@ export default function ProductPurchasePanel({
         </div>
       </div>
 
+      {isAdded ? (
+        <p className="mt-[10px] text-[14px] text-[#009e39]">
+          Товар добавлен в корзину.
+        </p>
+      ) : null}
+
       <p className="mt-[14px] text-[16px] text-black">
-        {inStock
-          ? "В наличии: товар есть на складе"
-          : "В наличии: нет в наличии"}
+        {inStock ? "В наличии: товар есть на складе" : "В наличии: нет в наличии"}
       </p>
     </>
   );

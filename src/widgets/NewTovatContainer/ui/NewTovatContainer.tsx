@@ -1,13 +1,13 @@
-import { getNewsLatest } from "@/entities/news/api/getNewsLatest";
 import InfoSection from "./InfoSection";
 import NewestTovar from "./NewestTovar";
 import { getProducts } from "@/entities/product/api/getProductLasted";
+import { getLatestNews } from "@/shared/api/news";
 
 export async function NewTovatContainer() {
   const products = await getProducts();
-  const news = await getNewsLatest(2);
+  const news = await getLatestNews(2);
 
-  console.log("news:", news);
+  // console.log("news:", news);
 
   return (
     <div className="mb-[50px]">

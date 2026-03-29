@@ -6,7 +6,7 @@ import { getProductsByQuery } from "@/entities/product/api/getProductQuery";
 export default async function SpecContainer() {
   const productSale = await getProductsByQuery({ discountedOnly: true });
 
-  console.log("Fetched discounted products in SpecContainer:", productSale);
+  // console.log("Fetched discounted products in SpecContainer:", productSale);
 
   return (
     <div className="w-full flex ">

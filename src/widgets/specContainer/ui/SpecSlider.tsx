@@ -15,7 +15,7 @@ export default function SpecSlider({ productSale }: SpecSliderProps) {
   return (
     <Swiper
       modules={[Autoplay]}
-      spaceBetween={40}
+      spaceBetween={0}
       slidesPerView={2}
       autoplay={{
         delay: 3000,

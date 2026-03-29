@@ -7,7 +7,7 @@ interface NewsSmallCardProps {
 }
 
 export default function NewsSmallCard({ news }: NewsSmallCardProps) {
-  console.log(news);
+  // console.log(news);
   return (
     <div className="w-[220px] h-auto flex flex-col">
       <div className="flex items-center gap-[10px] mb-[15px]">

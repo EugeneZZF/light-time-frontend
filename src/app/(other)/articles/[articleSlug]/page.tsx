@@ -4,7 +4,8 @@ import {
   getArticleBySlug,
   getArticles,
 } from "@/entities/article";
-import { ArticlesContainer } from "@/widgets/articlesContainer";
+
+// import { ArticlesNav } from "@/widgets/otherNav";
 
 type ArticleSlugPageProps = {
   params: Promise<{
@@ -26,12 +27,11 @@ export default async function ArticleSlugPage({
   }
 
   return (
-    <div className="flex w-full gap-[36px]">
-      <ArticlesContainer
-        articles={articles}
-        activeArticleSlug={articleSlug}
-      />
-      <ArticlePageContent article={article} />
-    </div>
+    <>
+      {/* <ArticlesNav currentArticleTitle={article.title} /> */}
+      <div className="flex w-full gap-[36px]">
+        <ArticlePageContent article={article} />
+      </div>
+    </>
   );
 }

@@ -7,4 +7,5 @@ export type News = {
   publishedAt: string;
   createdAt: string;
   updatedAt: string;
+  newsDate: string;
 };

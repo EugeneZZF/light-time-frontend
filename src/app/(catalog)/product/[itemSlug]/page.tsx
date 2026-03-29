@@ -118,6 +118,7 @@ export default async function ItemPage({ params }: ItemPageProps) {
 
         <div className="flex-1 pt-[1px]">
           <ProductPurchasePanel
+            productId={item.id}
             inStock={item.inStock}
             price={formatPrice(price)}
           />

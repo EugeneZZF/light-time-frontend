@@ -4,14 +4,24 @@ import { CONTACT_INFO } from "../model/links";
 export function BottomHeader() {
   return (
     <div className="flex h-[157px] w-full gap-[57px] pb-[25px] pl-[57px] pt-[25px]">
-      <img src="/header/logo.png" alt="Light Time" className="h-[82px] w-[215px]" />
+      <Link href={"/"}>
+        <img
+          src="/header/logo.png"
+          alt="Light Time"
+          className="h-[82px] w-[215px]"
+        />
+      </Link>
 
       <div className="flex h-[107px] w-[451px] flex-col items-start justify-start gap-[15px]">
         <div className="upper flex gap-[72px]">
           <div className="phone-cont text-nowrap">
             <div>
               <div className="flex items-center gap-[3px] text-[22px] font-bold text-black">
-                <img src="/header/phone.jpg" alt="" className="h-[19px] w-[16px]" />
+                <img
+                  src="/header/phone.jpg"
+                  alt=""
+                  className="h-[19px] w-[16px]"
+                />
                 <p className="h-[26px] leading-[26px]">{CONTACT_INFO.phone}</p>
               </div>
               <p className="mt-[10px] pl-[21px] text-[12px] leading-[12px] text-[#666666]">

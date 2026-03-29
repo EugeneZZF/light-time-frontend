@@ -45,6 +45,11 @@ const adminMenuItems: AdminMenuItem[] = [
     label: "Статьи",
     description: "Статические статьи сайта",
   },
+  {
+    href: "/admin/orders",
+    label: "Заказы",
+    description: "Новые заказы и их статусы",
+  },
 ];
 
 export default function AdminSidebarMenu() {

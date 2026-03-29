@@ -21,7 +21,7 @@ export default function InfoSidebar() {
               key={item.href}
               href={item.href}
               className={`block  border-[#d9d9d9] px-[4px]
-                 py-[7px] text-[16px] leading-[1.55] font-bold tracking-[-0.01em]
+                 py-[7px] text-[18px] leading-[1.55] font-bold tracking-[-0.01em]
                   ${
                     isActive
                       ? "text-black"

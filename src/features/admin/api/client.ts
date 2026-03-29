@@ -17,6 +17,40 @@ type ErrorResponse = {
   message?: string;
 };
 
+function redirectToAdminLogin() {
+  if (typeof window !== "undefined") {
+    window.location.replace("/admin/login");
+  }
+}
+
+function parseResponseBody<T>(text: string) {
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text) as T | ErrorResponse;
+  } catch {
+    return null;
+  }
+}
+
+function extractErrorMessage(
+  data: unknown,
+  fallback: string,
+): string {
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "message" in data &&
+    typeof data.message === "string"
+  ) {
+    return data.message;
+  }
+
+  return fallback;
+}
+
 export async function adminRequest<T>(
   path: string,
   options: AdminRequestOptions = {},
@@ -30,16 +64,14 @@ export async function adminRequest<T>(
   });
 
   const text = await response.text();
-  const data = text ? (JSON.parse(text) as T | ErrorResponse) : null;
+  const data = parseResponseBody<T>(text);
 
   if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof data.message === "string"
-        ? data.message
-        : "Request failed.";
+    const message = extractErrorMessage(data, "Request failed.");
+
+    if (response.status === 401 || message.toLowerCase() === "unauthorized") {
+      redirectToAdminLogin();
+    }
 
     throw new Error(message);
   }
@@ -57,18 +89,14 @@ export async function adminUploadFile(file: File): Promise<AdminUploadResponse> 
   });
 
   const text = await response.text();
-  const data = text
-    ? (JSON.parse(text) as AdminUploadResponse | ErrorResponse)
-    : null;
+  const data = parseResponseBody<AdminUploadResponse>(text);
 
   if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof data.message === "string"
-        ? data.message
-        : "Upload failed.";
+    const message = extractErrorMessage(data, "Upload failed.");
+
+    if (response.status === 401 || message.toLowerCase() === "unauthorized") {
+      redirectToAdminLogin();
+    }
 
     throw new Error(message);
   }
