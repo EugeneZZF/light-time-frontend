@@ -19,6 +19,9 @@ export async function middleware(request: NextRequest) {
   const session = await verifyAdminSession(sessionCookie);
   const { pathname } = request.nextUrl;
 
+  console.log("COOKIE:", sessionCookie);
+  console.log("SESSION:", session);
+
   if (pathname === "/admin/login" && session) {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
