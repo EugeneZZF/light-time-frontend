@@ -87,7 +87,7 @@ function getBreadcrumbs(pathname: string): BreadcrumbItem[] {
 }
 
 export default function OtherNav() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const [loadedArticle, setLoadedArticle] = useState<{
     slug: string;
     title: string | null;
@@ -112,14 +112,15 @@ export default function OtherNav() {
       return;
     }
 
+    const slug = articleSlug;
     let isCancelled = false;
 
     async function loadArticleTitle() {
-      const article = await getArticleBySlug(articleSlug);
+      const article = await getArticleBySlug(slug);
 
       if (!isCancelled) {
         setLoadedArticle({
-          slug: articleSlug,
+          slug,
           title: article?.title ?? null,
         });
       }
@@ -146,12 +147,14 @@ export default function OtherNav() {
 
     let isCancelled = false;
 
+    const slug = newsSlug;
+
     async function loadNewsTitle() {
-      const news = await getNewsBySlug(newsSlug);
+      const news = await getNewsBySlug(slug);
 
       if (!isCancelled) {
         setLoadedNews({
-          slug: newsSlug,
+          slug,
           title: news?.title ?? null,
         });
       }

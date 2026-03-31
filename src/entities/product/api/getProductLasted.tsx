@@ -15,15 +15,21 @@ import { Product } from "../model/types";
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 const fetchProducts = async (limit: number = 4): Promise<Product[]> => {
-  const response = await fetch(
-    `${baseUrl}/api/catalog/products/latest?limit=${limit}`,
-  );
+  try {
+    const response = await fetch(
+      `${baseUrl}/api/catalog/products/latest?limit=${limit}`,
+    );
 
-  if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    console.log("Fetched products:", await response.clone().json());
+    return response.json();
+  } catch (error) {
+    console.error("Failed to fetch latest products:", error);
+    return [];
   }
-  console.log("Fetched products:", await response.clone().json());
-  return response.json();
 };
 
 export const getProducts = unstable_cache(fetchProducts, ["products"], {

@@ -53,29 +53,34 @@ const fetchProductsByQuery = async (
   params: GetProductQueryParams = {},
 ): Promise<Product[]> => {
   const queryString = buildQueryString(params);
-  const response = await fetch(
-    `${baseUrl}/api/catalog/products${queryString ? `?${queryString}` : ""}`,
-  );
+  try {
+    const response = await fetch(
+      `${baseUrl}/api/catalog/products${queryString ? `?${queryString}` : ""}`,
+    );
 
-  if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    const data: ProductQueryResponse = await response.json();
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    if (Array.isArray(data.items)) {
+      return data.items;
+    }
+
+    if (Array.isArray(data.products)) {
+      return data.products;
+    }
+
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch products:", error);
+    return [];
   }
-
-  const data: ProductQueryResponse = await response.json();
-
-  if (Array.isArray(data)) {
-    return data;
-  }
-
-  if (Array.isArray(data.items)) {
-    return data.items;
-  }
-
-  if (Array.isArray(data.products)) {
-    return data.products;
-  }
-
-  return [];
 };
 
 export const getProductsByQuery = unstable_cache(

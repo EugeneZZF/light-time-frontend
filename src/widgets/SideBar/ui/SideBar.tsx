@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Category } from "@/entities/category/model/types";
 import { Product } from "@/entities/product/model/types";
 import SideBarLink from "./SideBarLink";
@@ -74,12 +74,14 @@ function resolveProductCategorySlug(
 }
 
 export function SideBar({ categories }: SideBarProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const searchCategorySlug = searchParams.get("categorySlug");
-  const [resolvedProductCategorySlug, setResolvedProductCategorySlug] = useState<
-    string | null
-  >(null);
+  const pathname = usePathname() ?? "";
+  const searchParams =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
+  const searchCategorySlug = searchParams.get("categorySlug") ?? null;
+  const [resolvedProductCategorySlug, setResolvedProductCategorySlug] =
+    useState<string | null>(null);
 
   const productSlug = useMemo(() => {
     if (!pathname.startsWith("/product/")) {
@@ -96,7 +98,9 @@ export function SideBar({ categories }: SideBarProps) {
 
     let isActive = true;
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/catalog/products?limit=1000`)
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/catalog/products?limit=1000`,
+    )
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`);

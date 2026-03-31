@@ -15,12 +15,18 @@ import { Category } from "../model/types";
 export const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 const fetchCategories = async (): Promise<Category[]> => {
-  const response = await fetch(`${baseUrl}/api/admin/categories/tree`);
+  try {
+    const response = await fetch(`${baseUrl}/api/admin/categories/tree`);
 
-  if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+    return [];
   }
-  return response.json();
 };
 
 export const getCategories = unstable_cache(fetchCategories, ["categories"], {

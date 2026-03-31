@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { INFO_SIDEBAR_ITEMS } from "@/shared/config/infoPages";
 
 export default function InfoSidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
 
   return (
     <aside className="w-[221px] flex-none pt-[21px]">

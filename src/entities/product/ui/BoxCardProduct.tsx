@@ -1,15 +1,15 @@
 import Link from "next/link";
-import { Product } from "../model/types";
 import { baseUrl } from "@/entities/category/api/getCategoryes";
+import { ProjectEquipment } from "@/entities/project/model/types";
 
 interface BoxCardProductProps {
-  item: any;
+  item: ProjectEquipment;
 }
 
 export default function BoxCardProduct({ item }: BoxCardProductProps) {
   return (
     <Link
-      href={item.productUrl}
+      href={item.productUrl ?? "#"}
       className="hover:shadow-[0_0_10px_rgba(255,0,0,0.2)] shadow-[0_0_10px_rgba(0,0,0,0.2)]"
     >
       <div

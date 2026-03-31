@@ -1,13 +1,18 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
 
 export default function Login() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const nextPath = searchParams?.get("next") || "/admin";
+  const [nextPath, setNextPath] = useState("/admin");
   const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    setNextPath(searchParams.get("next") ?? "/admin");
+  }, []);
+
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);

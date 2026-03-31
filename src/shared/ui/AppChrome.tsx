@@ -10,7 +10,7 @@ type AppChromeProps = {
 };
 
 export default function AppChrome({ children }: AppChromeProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const isAdminRoute = pathname.startsWith("/admin");
 
   if (isAdminRoute) {

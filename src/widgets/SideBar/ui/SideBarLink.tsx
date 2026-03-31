@@ -3,7 +3,6 @@
 import { animated, useSpring } from "@react-spring/web";
 import { Category } from "@/entities/category/model/types";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 interface SideBarLinkProps {
@@ -15,7 +14,10 @@ export default function SideBarLink({
   activeCategorySlug,
   category,
 }: SideBarLinkProps) {
-  const searchParams = useSearchParams();
+  const searchParams =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
 
@@ -63,7 +65,7 @@ export default function SideBarLink({
     },
   });
 
-  const nextParams = new URLSearchParams(searchParams.toString());
+  const nextParams = new URLSearchParams(searchParams?.toString() ?? "");
 
   if (isActive) {
     nextParams.delete("categorySlug");

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Category } from "@/entities/category/model/types";
 import { baseUrl } from "@/entities/category/api/getCategoryes";
 
@@ -13,8 +13,11 @@ export default function BigCardCatalogCategory({
   item,
 }: BigCardCatalogCategoryProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const nextParams = new URLSearchParams(searchParams.toString());
+  const currentSearchParams =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
+  const nextParams = new URLSearchParams(currentSearchParams.toString());
 
   nextParams.set("categorySlug", item.slug);
 

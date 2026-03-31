@@ -5,6 +5,7 @@ import { getProjectsByQuery } from "@/entities/project/api/getProjectQuery";
 import Link from "next/link";
 import formatDate from "@/shared/lib/date/formateDate";
 import BoxCardProduct from "@/entities/product/ui/BoxCardProduct";
+import { ProjectEquipment } from "@/entities/project/model/types";
 import ProjectImageGallery from "@/entities/project/ui/ProjectImageGallery";
 
 type ProjectDetailPageProps = {
@@ -83,7 +84,7 @@ export default async function ProjectDetailPage({
               Оборудование, использованное в проекте
             </h2>
             <div className="mt-[20px] flex gap-[20px]">
-              {project.equipment.map((product) => (
+              {project.equipment.map((product: ProjectEquipment) => (
                 <BoxCardProduct key={product.id} item={product} />
               ))}
             </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Category } from "@/entities/category/model/types";
 import { Product } from "@/entities/product/model/types";
 
@@ -124,9 +124,12 @@ function extractProducts(data: ProductQueryResponse): Product[] {
 export default function CatalogBreadcrumbs({
   categories,
 }: CatalogBreadcrumbsProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const activeCategorySlug = searchParams.get("categorySlug");
+  const pathname = usePathname() ?? "";
+  const searchParams =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
+  const activeCategorySlug = searchParams.get("categorySlug") ?? null;
   const { items } = resolveBreadcrumbState(categories, activeCategorySlug);
   const [productState, setProductState] = useState<ProductBreadcrumbState>({
     categories: [],
@@ -147,7 +150,9 @@ export default function CatalogBreadcrumbs({
 
     let isActive = true;
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/catalog/products?limit=1000`)
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/catalog/products?limit=1000`,
+    )
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`);
@@ -221,8 +226,8 @@ export default function CatalogBreadcrumbs({
   }, [categories, productSlug]);
 
   const title = productSlug
-    ? productState.title ?? ""
-    : items[items.length - 1]?.label ?? "Каталог продукции";
+    ? (productState.title ?? "")
+    : (items[items.length - 1]?.label ?? "Каталог продукции");
   const visibleCategories = productSlug ? productState.categories : items;
 
   return (
@@ -242,7 +247,10 @@ export default function CatalogBreadcrumbs({
           <span key={`${item.label}-${index}`} className="contents">
             <span className="text-[#c9c9c9]">/</span>
             {item.href ? (
-              <Link href={item.href} className="transition hover:text-[#ff3333]">
+              <Link
+                href={item.href}
+                className="transition hover:text-[#ff3333]"
+              >
                 {item.label}
               </Link>
             ) : (

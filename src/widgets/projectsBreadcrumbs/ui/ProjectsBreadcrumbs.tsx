@@ -15,7 +15,7 @@ function formatSegmentLabel(segment: string) {
 }
 
 export default function ProjectsBreadcrumbs() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const segments = pathname.split("/").filter(Boolean);
   const projectSegments = segments.slice(1);
   const title =
