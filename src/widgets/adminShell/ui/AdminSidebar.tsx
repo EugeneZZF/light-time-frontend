@@ -1,3 +1,5 @@
+"use client";
+
 import AdminSidebarMenu from "./AdminSidebarMenu";
 
 type AdminSidebarProps = {
@@ -17,7 +19,14 @@ export default function AdminSidebar({ email }: AdminSidebarProps) {
 
       <AdminSidebarMenu />
 
-      <form action="/api/admin/auth/logout" method="post" className="mt-2">
+      <form
+        action="/api/admin/auth/logout"
+        method="post"
+        className="mt-2"
+        onSubmit={() => {
+          localStorage.removeItem("admin_access_token");
+        }}
+      >
         <button
           type="submit"
           className="w-full rounded-[16px] border border-[#d9e3db] bg-white px-4 py-3 text-[15px] font-bold text-[#173523] transition hover:border-[#9bb9a2] hover:bg-[#f7fbf8]"

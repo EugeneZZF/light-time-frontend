@@ -31,11 +31,18 @@ export default function Login() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = (await response.json()) as { message?: string };
+      const data = (await response.json()) as {
+        message?: string;
+        accessToken?: string;
+      };
 
       if (!response.ok) {
         setError(data.message ?? "Не удалось войти.");
         return;
+      }
+
+      if (data.accessToken) {
+        localStorage.setItem("admin_access_token", data.accessToken);
       }
 
       router.replace(nextPath);

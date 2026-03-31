@@ -1,4 +1,7 @@
-import { adminSessionCookie, verifyAdminSession } from "@/shared/lib/auth/adminSession";
+import {
+  adminSessionCookie,
+  verifyAdminSession,
+} from "@/shared/lib/auth/adminSession";
 import { NextRequest, NextResponse } from "next/server";
 
 function buildLoginUrl(request: NextRequest) {
@@ -20,7 +23,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
 
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login" && !session) {
+  if (
+    pathname.startsWith("/admin") &&
+    pathname !== "/admin/login" &&
+    !session
+  ) {
     return NextResponse.redirect(buildLoginUrl(request));
   }
 

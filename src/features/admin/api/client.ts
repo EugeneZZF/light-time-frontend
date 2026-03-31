@@ -35,10 +35,7 @@ function parseResponseBody<T>(text: string) {
   }
 }
 
-function extractErrorMessage(
-  data: unknown,
-  fallback: string,
-): string {
+function extractErrorMessage(data: unknown, fallback: string): string {
   if (
     typeof data === "object" &&
     data !== null &&
@@ -55,11 +52,19 @@ export async function adminRequest<T>(
   path: string,
   options: AdminRequestOptions = {},
 ): Promise<T> {
+  const accessToken = localStorage.getItem("admin_access_token");
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  }
+
   const response = await fetch(`/api/admin/proxy/${path}`, {
     method: options.method ?? "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 
@@ -79,12 +84,24 @@ export async function adminRequest<T>(
   return data as T;
 }
 
-export async function adminUploadFile(file: File): Promise<AdminUploadResponse> {
+export async function adminUploadFile(
+  file: File,
+): Promise<AdminUploadResponse> {
   const formData = new FormData();
   formData.set("file", file);
 
+  const accessToken = localStorage.getItem("admin_access_token");
+  const session = localStorage.getItem("admin_session");
+
+  const headers: Record<string, string> = {};
+
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  }
+
   const response = await fetch("/api/admin/proxy/files/upload", {
     method: "POST",
+    headers,
     body: formData,
   });
 

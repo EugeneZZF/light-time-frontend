@@ -1,4 +1,3 @@
-import { adminAccessTokenCookie } from "@/shared/lib/auth/adminSession";
 import { NextRequest, NextResponse } from "next/server";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -14,7 +13,10 @@ async function forwardRequest(
     );
   }
 
-  const accessToken = request.cookies.get(adminAccessTokenCookie.name)?.value;
+  const authHeader = request.headers.get("Authorization");
+  const accessToken = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : null;
 
   if (!accessToken) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

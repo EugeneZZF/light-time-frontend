@@ -1,3 +1,5 @@
+"use client";
+
 import AdminNavMenu from "./AdminNavMenu";
 
 type AdminNavbarProps = {
@@ -25,7 +27,13 @@ export default function AdminNavbar({ email }: AdminNavbarProps) {
           <div className="text-[14px] text-[#57715d]">Вы вошли как</div>
           <div className="text-[16px] font-bold text-[#1a4024]">{email}</div>
 
-          <form action="/api/admin/auth/logout" method="post">
+          <form
+            action="/api/admin/auth/logout"
+            method="post"
+            onSubmit={() => {
+              localStorage.removeItem("admin_access_token");
+            }}
+          >
             <button
               type="submit"
               className="rounded-[12px] bg-[#143f20] px-4 py-2 text-[15px] font-bold text-white transition hover:bg-[#1b572c]"
