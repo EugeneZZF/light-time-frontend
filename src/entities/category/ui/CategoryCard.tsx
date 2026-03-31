@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { animated, useSpring } from "@react-spring/web";
 import Link from "next/link";
 import { Category } from "../model/types";
+import { baseUrl } from "../api/getCategoryes";
 
 interface CategoryCardProps {
   category: Category;
@@ -50,13 +51,19 @@ export default function CategoryCard({
     },
   });
 
-  const subcategories = category.subcategoriesA ?? category.SubcategoriesA ?? [];
+  const subcategories =
+    category.subcategoriesA ?? category.SubcategoriesA ?? [];
+
+  // console.log("Rendering CategoryCard", {
+  //   category,
+  // });
 
   return (
     <div className="h-auto w-[243px] ">
       <Link href={`/catalog?categorySlug=${category.slug}`} className="block">
         <img
           src={`./category/${category.slug}.jpg`}
+          // src={`${baseUrl}${category.imageUrl}`}
           alt={category.name}
           className="w-full h-[100px] border border-[#E8E8E8] shadow-[0_6px_5px_-5px_rgba(0,0,0,0.15)]"
         />
@@ -80,16 +87,18 @@ export default function CategoryCard({
               >
                 {subCat.name}
               </Link>
-              {(subCat.subcategoriesB ?? subCat.SubcategoriesB ?? []).map((subSubCat) => (
-                <div key={subSubCat.id}>
-                  <Link
-                    href={`/catalog?categorySlug=${subSubCat.slug}`}
-                    className="ml-[20px] block pl-[19px] pr-[19px] hover:text-[#ff3333]"
-                  >
-                    {subSubCat.name}
-                  </Link>
-                </div>
-              ))}
+              {(subCat.subcategoriesB ?? subCat.SubcategoriesB ?? []).map(
+                (subSubCat) => (
+                  <div key={subSubCat.id}>
+                    <Link
+                      href={`/catalog?categorySlug=${subSubCat.slug}`}
+                      className="ml-[20px] block pl-[19px] pr-[19px] hover:text-[#ff3333]"
+                    >
+                      {subSubCat.name}
+                    </Link>
+                  </div>
+                ),
+              )}
             </div>
           ))}
         </div>

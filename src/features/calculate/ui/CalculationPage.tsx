@@ -13,6 +13,7 @@ import { Product } from "@/entities/product/model/types";
 import { calculateLighting } from "@/features/calculate/model/calculateLighting";
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 
 type FixtureOption = {
   label: string;
@@ -179,16 +180,29 @@ export default function CalculationPage({ products }: CalculationPageProps) {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [phone, setPhone] = useState("");
   const [agreed, setAgreed] = useState(true);
+  const [isSubmittingExactCalculation, setIsSubmittingExactCalculation] =
+    useState(false);
+  const [exactCalculationError, setExactCalculationError] =
+    useState<ReactNode | null>(null);
+  const [exactCalculationSuccess, setExactCalculationSuccess] = useState<
+    string | null
+  >(null);
   const [resultText, setResultText] = useState(
     "Осталось указать габариты помещения.",
   );
+  const [calculationResult, setCalculationResult] = useState<{
+    area: number;
+    count: number;
+  } | null>(null);
 
   const selectedFixtureOption = useMemo(() => {
     if (!fixtureType) {
       return null;
     }
 
-    return FIXTURE_OPTIONS.find((option) => option.value === fixtureType) ?? null;
+    return (
+      FIXTURE_OPTIONS.find((option) => option.value === fixtureType) ?? null
+    );
   }, [fixtureType]);
 
   const fixtureProducts = useMemo(() => {
@@ -197,7 +211,10 @@ export default function CalculationPage({ products }: CalculationPageProps) {
     }
 
     return products
-      .filter((product) => getProductType(product) === selectedFixtureOption.productType)
+      .filter(
+        (product) =>
+          getProductType(product) === selectedFixtureOption.productType,
+      )
       .filter((product) => product.isActive);
   }, [products, selectedFixtureOption]);
 
@@ -207,13 +224,40 @@ export default function CalculationPage({ products }: CalculationPageProps) {
     null;
 
   const currentLux = LUX_STANDARDS[standard][roomType];
+  const selectedRoomLabel =
+    ROOM_OPTIONS.find((option) => option.value === roomType)?.label ?? "";
   const lumensPerLamp = selectedProduct
-    ? readNumericSpecification(selectedProduct, "luminous") ?? 0
+    ? (readNumericSpecification(selectedProduct, "luminous") ?? 0)
     : 0;
   const baseType = selectedProduct
     ? readStringSpecification(selectedProduct, "baseType")
     : null;
-  const productImageUrl = selectedProduct ? getProductImageUrl(selectedProduct) : null;
+  const productImageUrl = selectedProduct
+    ? getProductImageUrl(selectedProduct)
+    : null;
+  const numericLength = Number(length.replace(",", "."));
+  const numericWidth = Number(width.replace(",", "."));
+  const numericHeight = Number(height.replace(",", "."));
+  const numericWorkSurfaceHeight = Number(workSurfaceHeight.replace(",", "."));
+  const isCalculateReady =
+    Boolean(selectedProduct && fixtureType) &&
+    Number.isFinite(numericLength) &&
+    Number.isFinite(numericWidth) &&
+    Number.isFinite(numericHeight) &&
+    numericLength > 0 &&
+    numericWidth > 0 &&
+    numericHeight > 0;
+  const isPhoneReady = phone.trim().length > 0;
+  const calculateButtonClassName = `h-[47px] w-[163px] rounded-[3px] border text-[18px] font-bold shadow-[0_1px_3px_rgba(0,0,0,0.14)] ${
+    isCalculateReady
+      ? "border-[#ffb63e] bg-[linear-gradient(#ffd046_0%,_#ff9836_100%)] text-black"
+      : "border-[#f2c06f] bg-[linear-gradient(to_bottom,#ffd98d,#ffc86a)] text-[#7d5d22]"
+  }`;
+  const exactCalculationButtonClassName = `mt-[14px] min-h-[38px] w-full rounded-[3px] border px-[10px] py-[6px] text-center text-[13px] font-bold leading-[1.1] shadow-[0_1px_3px_rgba(0,0,0,0.14)] disabled:cursor-not-allowed disabled:opacity-60 ${
+    isPhoneReady
+      ? "border-[#ffb63e] bg-[linear-gradient(#ffd046_0%,_#ff9836_100%)] text-black"
+      : "border-[#f2c06f] bg-[linear-gradient(to_bottom,#ffd98d,#ffc86a)] text-[#7d5d22]"
+  }`;
 
   function handleFixtureTypeChange(value: string) {
     if (!value) {
@@ -229,7 +273,9 @@ export default function CalculationPage({ products }: CalculationPageProps) {
 
     const nextProducts = nextFixture
       ? products
-          .filter((product) => getProductType(product) === nextFixture.productType)
+          .filter(
+            (product) => getProductType(product) === nextFixture.productType,
+          )
           .filter((product) => product.isActive)
       : [];
 
@@ -238,11 +284,6 @@ export default function CalculationPage({ products }: CalculationPageProps) {
   }
 
   function handleCalculate() {
-    const numericLength = Number(length.replace(",", "."));
-    const numericWidth = Number(width.replace(",", "."));
-    const numericHeight = Number(height.replace(",", "."));
-    const numericWorkSurfaceHeight = Number(workSurfaceHeight.replace(",", "."));
-
     if (
       !selectedProduct ||
       !fixtureType ||
@@ -254,11 +295,13 @@ export default function CalculationPage({ products }: CalculationPageProps) {
       numericHeight <= 0
     ) {
       setResultText("Осталось указать габариты помещения.");
+      setCalculationResult(null);
       return;
     }
 
     if (lumensPerLamp <= 0) {
       setResultText("У выбранной модели не указан световой поток.");
+      setCalculationResult(null);
       return;
     }
 
@@ -278,7 +321,100 @@ export default function CalculationPage({ products }: CalculationPageProps) {
       floor,
     });
 
-    setResultText(formatResultText(result.count, result.totalLumens, result.area));
+    setResultText(
+      formatResultText(result.count, result.totalLumens, result.area),
+    );
+    setCalculationResult({
+      area: result.area,
+      count: result.count,
+    });
+  }
+
+  async function handleSubmitExactCalculation() {
+    if (!phone.trim()) {
+      setExactCalculationError("Укажите телефон.");
+      setExactCalculationSuccess(null);
+      return;
+    }
+
+    if (!agreed) {
+      setExactCalculationError(
+        <>
+          Подтвердите согласие с условиями{" "}
+          <a
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#0a7fe8] underline z-30"
+          >
+            пользовательского соглашения
+          </a>
+          .
+        </>,
+      );
+      setExactCalculationSuccess(null);
+      return;
+    }
+
+    try {
+      setIsSubmittingExactCalculation(true);
+      setExactCalculationError(null);
+      setExactCalculationSuccess(null);
+
+      const payload = {
+        phone: phone.trim(),
+        description: [
+          "Заявка на точный расчет освещения",
+          `Стандарт: ${standard}`,
+          `Тип помещения: ${selectedRoomLabel}`,
+          `Тип светильника: ${selectedFixtureOption?.label ?? "-"}`,
+          `Модель: ${selectedProduct?.title ?? "-"}`,
+          `Длина: ${length || "-"}`,
+          `Ширина: ${width || "-"}`,
+          `Высота: ${height || "-"}`,
+          `Высота рабочей поверхности: ${workSurfaceHeight || "-"}`,
+          `Потолок: ${ceiling}`,
+          `Стены: ${walls}`,
+          `Пол: ${floor}`,
+          calculationResult
+            ? `Расчетное количество светильников: ${calculationResult.count}`
+            : null,
+          calculationResult
+            ? `Расчетная площадь: ${calculationResult.area.toFixed(1)} м2`
+            : null,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      };
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/leads/orderCalculation`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      setExactCalculationSuccess(
+        "Заявка отправлена. Мы свяжемся с вами для точного расчета.",
+      );
+      setExactCalculationError(null);
+      setPhone("");
+    } catch {
+      setExactCalculationError(
+        "Не удалось отправить заявку. Попробуйте еще раз.",
+      );
+      setExactCalculationSuccess(null);
+    } finally {
+      setIsSubmittingExactCalculation(false);
+    }
   }
 
   return (
@@ -295,10 +431,14 @@ export default function CalculationPage({ products }: CalculationPageProps) {
             </h2>
 
             <div className="mt-[34px]">
-              <div className="text-[16px] font-bold leading-none text-black">Тип</div>
+              <div className="text-[16px] font-bold leading-none text-black">
+                Тип
+              </div>
               <select
                 value={fixtureType}
-                onChange={(event) => handleFixtureTypeChange(event.target.value)}
+                onChange={(event) =>
+                  handleFixtureTypeChange(event.target.value)
+                }
                 className={`${selectClassName} mt-[14px] w-full`}
               >
                 <option value="">Выберите</option>
@@ -311,7 +451,9 @@ export default function CalculationPage({ products }: CalculationPageProps) {
             </div>
 
             <div className="mt-[30px]">
-              <div className="text-[16px] font-bold leading-none text-black">Модель</div>
+              <div className="text-[16px] font-bold leading-none text-black">
+                Модель
+              </div>
               <select
                 value={selectedProduct?.id ?? ""}
                 onChange={(event) => setSelectedProductId(event.target.value)}
@@ -348,11 +490,13 @@ export default function CalculationPage({ products }: CalculationPageProps) {
               </div>
 
               <div className="mt-[18px] text-[16px] leading-[1.45] text-black">
-                <div className="flex items-end">
-                  <span>Производитель</span>
-                  <span className="mx-[4px] flex-1 border-b border-dotted border-[#888]" />
-                  <span>{selectedProduct?.categories.main?.name ?? "null"}</span>
-                </div>
+                {selectedProduct?.brand ? (
+                  <div className="flex items-end">
+                    <span>Производитель</span>
+                    <span className="mx-[4px] flex-1 border-b border-dotted border-[#888]" />
+                    <span>{selectedProduct?.brand?.name ?? "null"}</span>
+                  </div>
+                ) : null}
                 <div className="flex items-end">
                   <span>Световой поток, Лм</span>
                   <span className="mx-[4px] flex-1 border-b border-dotted border-[#888]" />
@@ -408,7 +552,9 @@ export default function CalculationPage({ products }: CalculationPageProps) {
               <div className="mt-[14px] grid grid-cols-[1fr_89px] gap-[5px]">
                 <select
                   value={roomType}
-                  onChange={(event) => setRoomType(event.target.value as RoomType)}
+                  onChange={(event) =>
+                    setRoomType(event.target.value as RoomType)
+                  }
                   className={selectClassName}
                 >
                   {ROOM_OPTIONS.map((option) => (
@@ -493,7 +639,9 @@ export default function CalculationPage({ products }: CalculationPageProps) {
             </div>
 
             <div className="mt-[28px]">
-              <div className="text-[18px] font-bold leading-none text-black">Отделка</div>
+              <div className="text-[18px] font-bold leading-none text-black">
+                Отделка
+              </div>
 
               <div className="mt-[14px] grid grid-cols-3 gap-x-[34px]">
                 <label>
@@ -502,7 +650,9 @@ export default function CalculationPage({ products }: CalculationPageProps) {
                   </div>
                   <select
                     value={ceiling}
-                    onChange={(event) => setCeiling(event.target.value as CeilingType)}
+                    onChange={(event) =>
+                      setCeiling(event.target.value as CeilingType)
+                    }
                     className={`${selectClassName} mt-[14px] w-[98px]`}
                   >
                     <option value="white">Белый</option>
@@ -517,7 +667,9 @@ export default function CalculationPage({ products }: CalculationPageProps) {
                   </div>
                   <select
                     value={walls}
-                    onChange={(event) => setWalls(event.target.value as WallType)}
+                    onChange={(event) =>
+                      setWalls(event.target.value as WallType)
+                    }
                     className={`${selectClassName} mt-[14px] w-[98px]`}
                   >
                     <option value="light">Светлые</option>
@@ -531,7 +683,9 @@ export default function CalculationPage({ products }: CalculationPageProps) {
                   </div>
                   <select
                     value={floor}
-                    onChange={(event) => setFloor(event.target.value as FloorType)}
+                    onChange={(event) =>
+                      setFloor(event.target.value as FloorType)
+                    }
                     className={`${selectClassName} mt-[14px] w-[90px]`}
                   >
                     <option value="dark">Тёмный</option>
@@ -541,8 +695,8 @@ export default function CalculationPage({ products }: CalculationPageProps) {
               </div>
 
               <p className="mt-[10px] max-w-[420px] text-[13px] italic leading-[1.15] text-[#6e6e6e]">
-                Важен оттенок, а не сам цвет. Например, небо светло-синее, а вода
-                тёмно-синяя.
+                Важен оттенок, а не сам цвет. Например, небо светло-синее, а
+                вода тёмно-синяя.
               </p>
             </div>
 
@@ -550,56 +704,72 @@ export default function CalculationPage({ products }: CalculationPageProps) {
               <button
                 type="button"
                 onClick={handleCalculate}
-                className="h-[47px] w-[163px] rounded-[3px] border border-[#f2c06f] bg-[linear-gradient(to_bottom,#ffd98d,#ffc86a)] text-[18px] font-bold text-[#7d5d22] shadow-[0_1px_3px_rgba(0,0,0,0.14)]"
+                className={calculateButtonClassName}
               >
                 Рассчитать
               </button>
 
-              <p className="mt-[18px] text-[16px] leading-[1.15] text-black">
-                {resultText.includes("Осталось")
-                  ? "Осталось "
-                  : ""}
-                {resultText.includes("Осталось") ? (
-                  <span className="text-black">
-                    <span className="text-[#0a7fe8] underline">
-                      указать габариты помещения.
-                    </span>
+              {calculationResult ? (
+                <div className="mt-[18px] h-auto w-full max-w-[468px] bg-[#fefed5] px-[20px] py-[15px] text-[18px] leading-[1.35] text-black">
+                  На <span className="font-bold">{selectedRoomLabel}</span>{" "}
+                  площадью{" "}
+                  <span className="font-bold">
+                    {calculationResult.area.toFixed(1)} м2
+                  </span>{" "}
+                  вам потребуется{" "}
+                  <span className="font-bold">{calculationResult.count}</span>{" "}
+                  светильников{" "}
+                  <span className="font-bold">
+                    {selectedProduct?.title ?? ""}
                   </span>
-                ) : (
-                  resultText
-                )}
-              </p>
+                </div>
+              ) : (
+                <p className="mt-[18px] text-[16px] leading-[1.15] text-black">
+                  {resultText.includes("Осталось") ? "Осталось " : ""}
+                  {resultText.includes("Осталось") ? (
+                    <span className="text-black">
+                      <span className="text-[#0a7fe8] underline">
+                        указать габариты помещения.
+                      </span>
+                    </span>
+                  ) : (
+                    resultText
+                  )}
+                </p>
+              )}
             </div>
           </div>
 
           <aside className="h-fit w-full border border-[#e2e2e2] bg-white px-[20px] pb-[18px] pt-[16px] shadow-[0_3px_12px_rgba(0,0,0,0.12)]">
-            <p className="text-[16px] leading-[1.05] text-black">
+            <p className="text-[14px] leading-[1.05] text-black">
               Это примерный расчёт,
-              <br />
+              {/* <br /> */}
               чтобы узнать точное
-              <br />
+              {/* <br /> */}
               количество светильников
-              <br />
-              и необходимый расходный
-              <br />
-              материал, оставьте свой
-              <br />
-              <span className="text-[#0a7fe8] underline">телефон</span>.
+              {/* <br /> */}и необходимый расходный
+              {/* <br /> */}
+              материал,
+              {/* <br /> */}
+              <span className="text-[#0a7fe8] underline">
+                оставьте свой телефон
+              </span>
+              .
             </p>
 
-            <p className="mt-[18px] text-[16px] leading-[1.1] text-black">
+            <p className="mt-[18px] text-[14px] leading-[1.1] text-black">
               Продавец проведёт точный
               <br />
               расчёт и свяжется с вами.
             </p>
 
-            <div className="mt-[24px] text-[16px] font-bold leading-none text-black">
+            <div className="mt-[24px] text-[14px] font-bold leading-none text-black">
               Телефон
             </div>
             <input
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
-              className={`${inputClassName} mt-[14px] h-[34px] w-full px-[10px]`}
+              className={`${inputClassName} mt-[8px] h-[34px] w-full px-[10px]`}
             />
 
             <div className="mt-[12px] text-[15px] italic text-[#5f5f5f]">
@@ -618,21 +788,38 @@ export default function CalculationPage({ products }: CalculationPageProps) {
                 <br />
                 условиями
                 <br />
-                <span className="text-[#0a7fe8] underline">
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(event) => event.stopPropagation()}
+                  className="text-[#0a7fe8] underline"
+                >
                   пользовательского
                   <br />
                   соглашения
-                </span>
+                </a>
               </span>
             </label>
 
             <button
               type="button"
-              disabled={!agreed}
-              className="mt-[14px] min-h-[38px] w-full rounded-[3px] border border-[#f2c06f] bg-[linear-gradient(to_bottom,#ffd98d,#ffc86a)] px-[10px] py-[6px] text-center text-[13px] font-bold leading-[1.1] text-[#7d5d22] shadow-[0_1px_3px_rgba(0,0,0,0.14)] disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleSubmitExactCalculation}
+              disabled={!isPhoneReady || isSubmittingExactCalculation}
+              className={exactCalculationButtonClassName}
             >
               заказать точный расчёт
             </button>
+            {exactCalculationError ? (
+              <p className="mt-[10px] text-[13px] leading-[1.2] text-[#b43434]">
+                {exactCalculationError}
+              </p>
+            ) : null}
+            {exactCalculationSuccess ? (
+              <p className="mt-[10px] text-[13px] leading-[1.2] text-[#1e7a32]">
+                {exactCalculationSuccess}
+              </p>
+            ) : null}
           </aside>
         </div>
       </div>

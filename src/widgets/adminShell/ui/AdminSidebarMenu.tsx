@@ -50,6 +50,11 @@ const adminMenuItems: AdminMenuItem[] = [
     label: "Заказы",
     description: "Новые заказы и их статусы",
   },
+  {
+    href: "/admin/orderCalculations",
+    label: "Расчёты",
+    description: "Заказы расчётов от клиентов",
+  },
 ];
 
 export default function AdminSidebarMenu() {

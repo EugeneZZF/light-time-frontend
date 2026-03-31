@@ -1,6 +1,7 @@
 import {
   LUX_STANDARDS,
   REFLECTANCE,
+  STANDARD_RESERVE_FACTORS,
 } from "@/entities/calculate/model/constants";
 import { CalculateLightingInput, CalculateLightingResult } from "./types";
 import { getUtilizationFactor, adjustByFixtureType } from "./utils";
@@ -23,10 +24,10 @@ export function calculateLighting(
       REFLECTANCE.walls[input.walls] +
       REFLECTANCE.floor[input.floor]) /
     3;
-  utilization += (averageReflectance - 0.33) * 0.2;
-  utilization = Math.min(Math.max(utilization, 0.25), 0.8);
+  utilization += (averageReflectance - 0.33) * 0.1;
+  utilization = Math.min(Math.max(utilization, 0.35), 0.85);
 
-  const maintenance = 1.4;
+  const maintenance = STANDARD_RESERVE_FACTORS[input.standard];
 
   const totalLumens = (lux * area * maintenance) / utilization;
 

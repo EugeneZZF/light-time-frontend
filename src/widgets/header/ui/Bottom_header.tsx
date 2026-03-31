@@ -73,12 +73,13 @@ export function BottomHeader() {
       <div className="ml-[20px] flex w-[170px] gap-[5px]">
         <img src="/header/list.jpg" alt="" className="h-[22px] w-[18px]" />
         <div className="flex flex-col">
-          <Link
-            href="/"
+          <a
+            href="/price.xls"
+            download="price.xls"
             className="text-[18px] leading-[18px] text-[#0098DD] underline"
           >
             Скачать оптовый прайс-лист
-          </Link>
+          </a>
           <p className="text-[14px] text-[#666666]">от 18.02.2026, 29.4 Мб</p>
         </div>
       </div>

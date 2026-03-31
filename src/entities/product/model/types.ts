@@ -6,6 +6,11 @@ export type Product = {
   price: string;
   inStock: boolean;
   description: string | null;
+  brand: {
+    id: number;
+    name: string;
+    slug: string;
+  } | null;
   img: {
     url: string;
     sortOrder: number;

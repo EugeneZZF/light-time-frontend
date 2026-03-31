@@ -66,3 +66,8 @@ export const REFLECTANCE = {
     black: 0.1,
   },
 };
+
+export const STANDARD_RESERVE_FACTORS: Record<LightingStandard, number> = {
+  SNIP: 1,
+  EU: 1,
+};

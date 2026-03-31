@@ -137,3 +137,15 @@ export type AdminOrder = {
   total: string;
   updatedAt?: string;
 };
+
+export type AdminOrderCalculation = {
+  id: number;
+  customerName: string;
+  email: string;
+  phone: string;
+  status: string;
+  estimatedPrice: string | null;
+  description: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};

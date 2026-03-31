@@ -1,14 +1,14 @@
 import Link from "next/link";
 
 const navigationLinks = [
-  { href: "#about", label: "О нас" },
-  { href: "#catalog", label: "Каталог" },
-  { href: "#projects", label: "Работы" },
-  { href: "#contacts", label: "Контакты" },
+  { href: "/about", label: "О нас" },
+  { href: "/catalog", label: "Каталог" },
+  { href: "/projects", label: "Работы" },
+  { href: "/contacts", label: "Контакты" },
 ];
 
 const infoLinks = [
-  { href: "#agreement", label: "Пользовательское соглашение" },
+  { href: "/privacy", label: "Пользовательское соглашение" },
   { href: "#sitemap", label: "Карта сайта" },
 ];
 
