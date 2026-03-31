@@ -77,9 +77,9 @@ export async function adminRequest<T>(
   if (!response.ok) {
     const message = extractErrorMessage(data, "Request failed.");
 
-    if (response.status === 401 || message.toLowerCase() === "unauthorized") {
-      redirectToAdminLogin();
-    }
+    // if (response.status === 401 || message.toLowerCase() === "unauthorized") {
+    //   redirectToAdminLogin();
+    // }
 
     throw new Error(message);
   }
@@ -115,9 +115,9 @@ export async function adminUploadFile(
   if (!response.ok) {
     const message = extractErrorMessage(data, "Upload failed.");
 
-    if (response.status === 401 || message.toLowerCase() === "unauthorized") {
-      redirectToAdminLogin();
-    }
+    // if (response.status === 401 || message.toLowerCase() === "unauthorized") {
+    //   redirectToAdminLogin();
+    // }
 
     throw new Error(message);
   }

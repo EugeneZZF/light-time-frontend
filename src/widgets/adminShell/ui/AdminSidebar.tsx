@@ -12,7 +12,7 @@ export default function AdminSidebar({ email }: AdminSidebarProps) {
           Light Time
         </div>
         <div className="mt-3 text-[28px] font-bold leading-none">Админка</div>
-        <div className="mt-4 text-[13px] text-[#d8e7dc]">{email}</div>
+        {/* <div className="mt-4 text-[13px] text-[#d8e7dc]">{email}</div> */}
       </div>
 
       <AdminSidebarMenu />
