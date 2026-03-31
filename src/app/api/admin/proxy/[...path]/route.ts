@@ -32,6 +32,11 @@ async function forwardRequest(
 
   headers.set("Authorization", `Bearer ${accessToken}`);
 
+  const cookie = request.headers.get("cookie");
+  if (cookie) {
+    headers.set("cookie", cookie); // 🔥 ВАЖНО
+  }
+
   if (contentType) {
     headers.set("Content-Type", contentType);
   }
