@@ -16,8 +16,8 @@ function buildLoginUrl(request: NextRequest) {
 
 export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get(adminSessionCookie.name)?.value;
-  // const session = await verifyAdminSession(sessionCookie);
-  const session = localStorage.getItem("admin_session");
+  const session = await verifyAdminSession(sessionCookie);
+  // const session = localStorage.getItem("admin_session")
 
   const { pathname } = request.nextUrl;
 
