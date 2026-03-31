@@ -64,7 +64,7 @@ export default function Login() {
             Light Time
           </p>
           <h1 className="mt-3 text-[34px] font-bold leading-none text-[#153a1e]">
-            Вход в админку
+            Вход в админ панель
           </h1>
           <p className="mt-3 text-[16px] leading-[1.4] text-[#49614f]">
             Авторизуйтесь, чтобы открыть раздел{" "}
