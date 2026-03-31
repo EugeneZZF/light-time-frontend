@@ -65,7 +65,7 @@ export async function adminRequest<T>(
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(`/api/admin/proxy/${path}`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/${path}`, {
     method: options.method ?? "GET",
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
@@ -103,7 +103,7 @@ export async function adminUploadFile(
   const formData = new FormData();
   formData.set("file", file);
 
-  const response = await fetch("/api/admin/proxy/files/upload", {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/files/upload`, {
     method: "POST",
     headers,
     body: formData,
