@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-
+  // https://light-time.ru
+  // const upstreamResponse = await fetch(`${baseUrl}/api/admin/auth/login`, {
   const upstreamResponse = await fetch(`${baseUrl}/api/admin/auth/login`, {
     method: "POST",
     headers: {
@@ -97,6 +98,7 @@ export async function POST(request: NextRequest) {
     path: "/",
     sameSite: "lax",
     secure: false,
+    domain: new URL(request.url).hostname,
   });
 
   return response;
