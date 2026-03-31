@@ -1,5 +1,4 @@
 import {
-  adminAccessTokenCookie,
   adminSessionCookie,
   createAdminSession,
 } from "@/shared/lib/auth/adminSession";
@@ -85,9 +84,10 @@ export async function POST(request: NextRequest) {
   const session = await createAdminSession(email);
   const response = NextResponse.json({
     ok: true,
+    accessToken,
     user:
       typeof responseData === "object" && responseData !== null
-        ? responseData.user ?? { email }
+        ? (responseData.user ?? { email })
         : { email },
   });
 
@@ -96,14 +96,7 @@ export async function POST(request: NextRequest) {
     maxAge: adminSessionCookie.maxAge,
     path: "/",
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  });
-  response.cookies.set(adminAccessTokenCookie.name, accessToken, {
-    httpOnly: true,
-    maxAge: adminAccessTokenCookie.maxAge,
-    path: "/",
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: false,
   });
 
   return response;

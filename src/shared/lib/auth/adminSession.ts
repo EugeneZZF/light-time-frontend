@@ -95,9 +95,7 @@ export async function verifyAdminSession(sessionValue?: string | null) {
   }
 
   try {
-    const payload = JSON.parse(
-      fromBase64Url(encodedPayload),
-    ) as SessionPayload;
+    const payload = JSON.parse(fromBase64Url(encodedPayload)) as SessionPayload;
 
     if (!payload.email || !payload.issuedAt) {
       return null;
@@ -118,9 +116,4 @@ export async function verifyAdminSession(sessionValue?: string | null) {
 export const adminSessionCookie = {
   maxAge: SESSION_MAX_AGE,
   name: SESSION_COOKIE_NAME,
-};
-
-export const adminAccessTokenCookie = {
-  maxAge: SESSION_MAX_AGE,
-  name: ACCESS_TOKEN_COOKIE_NAME,
 };
