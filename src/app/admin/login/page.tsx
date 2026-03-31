@@ -44,7 +44,7 @@ export default function Login() {
       if (data.accessToken) {
         localStorage.setItem("admin_access_token", data.accessToken);
         localStorage.setItem("admin_session", data.accessToken);
-        document.cookie = `admin_session=${data.accessToken}; path=/; max-age=86400;`;
+        // document.cookie = `admin_session=${data.accessToken}; path=/; max-age=86400;`;
       }
 
       router.replace(nextPath);

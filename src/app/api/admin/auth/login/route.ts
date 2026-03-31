@@ -92,13 +92,21 @@ export async function POST(request: NextRequest) {
         : { email },
   });
 
+  // response.cookies.set(adminSessionCookie.name, session, {
+  //   httpOnly: true,
+  //   maxAge: adminSessionCookie.maxAge,
+  //   path: "/",
+  //   sameSite: "lax",
+  //   secure: false,
+  //   domain: new URL(request.url).hostname,
+  // });
+
   response.cookies.set(adminSessionCookie.name, session, {
     httpOnly: true,
     maxAge: adminSessionCookie.maxAge,
     path: "/",
     sameSite: "lax",
-    secure: false,
-    domain: new URL(request.url).hostname,
+    secure: true,
   });
 
   return response;
