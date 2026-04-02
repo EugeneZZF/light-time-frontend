@@ -1,4 +1,5 @@
 import AdminSidebarMenu from "./AdminSidebarMenu";
+import AdminLogoutButton from "./AdminLogoutButton";
 
 type AdminSidebarProps = {
   email: string;
@@ -17,14 +18,15 @@ export default function AdminSidebar({ email }: AdminSidebarProps) {
 
       <AdminSidebarMenu />
 
-      <form action="/api/admin/auth/logout" method="post" className="mt-2">
+      {/* <form action="/api/admin/auth/logout" method="post" className="mt-2">
         <button
           type="submit"
           className="w-full rounded-[16px] border border-[#d9e3db] bg-white px-4 py-3 text-[15px] font-bold text-[#173523] transition hover:border-[#9bb9a2] hover:bg-[#f7fbf8]"
         >
           Выйти
         </button>
-      </form>
+      </form> */}
+      <AdminLogoutButton />
     </aside>
   );
 }
