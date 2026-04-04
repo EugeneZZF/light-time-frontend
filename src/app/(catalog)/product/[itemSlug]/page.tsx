@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getProductBySlug } from "@/entities/product/api/getProductBySlug";
-import { getProductsByQuery } from "@/entities/product/api/getProductQuery";
+import { getAllProducts } from "@/entities/product/api/getProductQuery";
 import { Product } from "@/entities/product/model/types";
 import ProductImageGallery from "@/entities/product/ui/ProductImageGallery";
 import ProductPurchasePanel from "@/entities/product/ui/ProductPurchasePanel";
@@ -123,7 +123,7 @@ export default async function ItemPage({ params }: ItemPageProps) {
     url: `${baseUrl}${image.url}`,
   }));
   const relatedCategoryFilter = getRelatedCategoryFilter(item);
-  const relatedProducts = (await getProductsByQuery({ limit: 1000 }))
+  const relatedProducts = (await getAllProducts())
     .filter((product) => product.slug !== item.slug)
     .filter(relatedCategoryFilter)
     .slice(0, 4);

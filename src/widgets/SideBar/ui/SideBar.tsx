@@ -1,36 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useMemo } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Category } from "@/entities/category/model/types";
-import { Product } from "@/entities/product/model/types";
+import { CatalogProductLookupItem } from "@/entities/product/api/getProductQuery";
 import SideBarLink from "./SideBarLink";
 
 interface SideBarProps {
   categories: Category[];
-}
-
-type ProductQueryResponse =
-  | Product[]
-  | {
-      items?: Product[];
-      products?: Product[];
-    };
-
-function extractProducts(data: ProductQueryResponse): Product[] {
-  if (Array.isArray(data)) {
-    return data;
-  }
-
-  if (Array.isArray(data.items)) {
-    return data.items;
-  }
-
-  if (Array.isArray(data.products)) {
-    return data.products;
-  }
-
-  return [];
+  products: CatalogProductLookupItem[];
 }
 
 function findCategorySlugById(
@@ -64,7 +42,7 @@ function findCategorySlugById(
 
 function resolveProductCategorySlug(
   categories: Category[],
-  product: Product,
+  product: CatalogProductLookupItem,
 ): string | null {
   return (
     findCategorySlugById(categories, product.categories.subB?.id) ??
@@ -73,15 +51,10 @@ function resolveProductCategorySlug(
   );
 }
 
-export function SideBar({ categories }: SideBarProps) {
+export function SideBar({ categories, products }: SideBarProps) {
   const pathname = usePathname() ?? "";
-  const searchParams =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search)
-      : new URLSearchParams();
-  const searchCategorySlug = searchParams.get("categorySlug") ?? null;
-  const [resolvedProductCategorySlug, setResolvedProductCategorySlug] =
-    useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const searchCategorySlug = searchParams?.get("categorySlug") ?? null;
 
   const productSlug = useMemo(() => {
     if (!pathname.startsWith("/product/")) {
@@ -91,46 +64,15 @@ export function SideBar({ categories }: SideBarProps) {
     return pathname.split("/product/")[1] ?? null;
   }, [pathname]);
 
-  useEffect(() => {
+  const resolvedProductCategorySlug = useMemo(() => {
     if (!productSlug) {
-      return;
+      return null;
     }
 
-    let isActive = true;
+    const product = products.find((item) => item.slug === productSlug);
 
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/catalog/products?limit=1000`,
-    )
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        return response.json();
-      })
-      .then((data: ProductQueryResponse) => {
-        if (!isActive) {
-          return;
-        }
-
-        const product = extractProducts(data).find(
-          (item) => item.slug === productSlug,
-        );
-
-        setResolvedProductCategorySlug(
-          product ? resolveProductCategorySlug(categories, product) : null,
-        );
-      })
-      .catch(() => {
-        if (isActive) {
-          setResolvedProductCategorySlug(null);
-        }
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [categories, productSlug]);
+    return product ? resolveProductCategorySlug(categories, product) : null;
+  }, [categories, productSlug, products]);
 
   const activeCategorySlug =
     searchCategorySlug ?? (productSlug ? resolvedProductCategorySlug : null);

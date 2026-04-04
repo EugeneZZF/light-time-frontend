@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Category } from "@/entities/category/model/types";
-import { Product } from "@/entities/product/model/types";
+import { CatalogProductLookupItem } from "@/entities/product/api/getProductQuery";
 
 interface CatalogBreadcrumbsProps {
   categories: Category[];
+  products: CatalogProductLookupItem[];
 }
 
 type BreadcrumbItem = {
@@ -23,13 +24,6 @@ type ProductBreadcrumbState = {
   title?: string;
   categories: BreadcrumbItem[];
 };
-
-type ProductQueryResponse =
-  | Product[]
-  | {
-      items?: Product[];
-      products?: Product[];
-    };
 
 function resolveBreadcrumbState(
   categories: Category[],
@@ -105,35 +99,14 @@ function findCategorySlugById(
   return null;
 }
 
-function extractProducts(data: ProductQueryResponse): Product[] {
-  if (Array.isArray(data)) {
-    return data;
-  }
-
-  if (Array.isArray(data.items)) {
-    return data.items;
-  }
-
-  if (Array.isArray(data.products)) {
-    return data.products;
-  }
-
-  return [];
-}
-
 export default function CatalogBreadcrumbs({
   categories,
+  products,
 }: CatalogBreadcrumbsProps) {
   const pathname = usePathname() ?? "";
-  const searchParams =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search)
-      : new URLSearchParams();
-  const activeCategorySlug = searchParams.get("categorySlug") ?? null;
+  const searchParams = useSearchParams();
+  const activeCategorySlug = searchParams?.get("categorySlug") ?? null;
   const { items } = resolveBreadcrumbState(categories, activeCategorySlug);
-  const [productState, setProductState] = useState<ProductBreadcrumbState>({
-    categories: [],
-  });
 
   const productSlug = useMemo(() => {
     if (!pathname.startsWith("/product/")) {
@@ -143,87 +116,62 @@ export default function CatalogBreadcrumbs({
     return pathname.split("/product/")[1] ?? null;
   }, [pathname]);
 
-  useEffect(() => {
+  const productState = useMemo<ProductBreadcrumbState>(() => {
     if (!productSlug) {
-      return;
+      return { categories: [] };
     }
 
-    let isActive = true;
+    const product = products.find((item) => item.slug === productSlug);
 
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/catalog/products?limit=1000`,
-    )
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
+    if (!product) {
+      return { categories: [] };
+    }
 
-        return response.json();
-      })
-      .then((data: ProductQueryResponse) => {
-        const product = extractProducts(data).find(
-          (item) => item.slug === productSlug,
-        );
+    return {
+      title: product.title,
+      categories: [
+        product.categories.main
+          ? {
+              href: (() => {
+                const slug = findCategorySlugById(
+                  categories,
+                  product.categories.main?.id,
+                );
 
-        if (!isActive || !product) {
-          return;
-        }
+                return slug ? `/catalog?categorySlug=${slug}` : undefined;
+              })(),
+              label: product.categories.main.name,
+            }
+          : null,
+        product.categories.subA
+          ? {
+              href: (() => {
+                const slug = findCategorySlugById(
+                  categories,
+                  product.categories.subA?.id,
+                );
 
-        setProductState({
-          title: product.title,
-          categories: [
-            product.categories.main
-              ? {
-                  href: (() => {
-                    const slug = findCategorySlugById(
-                      categories,
-                      product.categories.main?.id,
-                    );
+                return slug ? `/catalog?categorySlug=${slug}` : undefined;
+              })(),
+              label: product.categories.subA.name,
+            }
+          : null,
+        product.categories.subB
+          ? {
+              href: (() => {
+                const slug = findCategorySlugById(
+                  categories,
+                  product.categories.subB?.id,
+                );
 
-                    return slug ? `/catalog?categorySlug=${slug}` : undefined;
-                  })(),
-                  label: product.categories.main.name,
-                }
-              : null,
-            product.categories.subA
-              ? {
-                  href: (() => {
-                    const slug = findCategorySlugById(
-                      categories,
-                      product.categories.subA?.id,
-                    );
-
-                    return slug ? `/catalog?categorySlug=${slug}` : undefined;
-                  })(),
-                  label: product.categories.subA.name,
-                }
-              : null,
-            product.categories.subB
-              ? {
-                  href: (() => {
-                    const slug = findCategorySlugById(
-                      categories,
-                      product.categories.subB?.id,
-                    );
-
-                    return slug ? `/catalog?categorySlug=${slug}` : undefined;
-                  })(),
-                  label: product.categories.subB.name,
-                }
-              : null,
-          ].filter(Boolean) as BreadcrumbItem[],
-        });
-      })
-      .catch(() => {
-        if (isActive) {
-          setProductState({ categories: [] });
-        }
-      });
-
-    return () => {
-      isActive = false;
+                return slug ? `/catalog?categorySlug=${slug}` : undefined;
+              })(),
+              label: product.categories.subB.name,
+            }
+          : null,
+      ].filter(Boolean) as BreadcrumbItem[],
     };
-  }, [categories, productSlug]);
+  }, [categories, productSlug, products]);
 
   const title = productSlug
     ? (productState.title ?? "")

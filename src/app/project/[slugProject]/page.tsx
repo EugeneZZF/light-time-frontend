@@ -29,12 +29,12 @@ export default async function ProjectDetailPage({
     .slice(0, 4);
 
   const detailText = project.description?.trim() || project.content?.trim();
-  const projectImages = project.images.map((image) => ({
-    sortOrder: image.sortOrder,
-    url: `${baseUrl ?? ""}${image.url}`,
-  }));
-
-  console.log(project);
+  const projectImages = project.images
+    .filter((image) => Boolean(image?.url))
+    .map((image) => ({
+      sortOrder: image.sortOrder,
+      url: `${baseUrl ?? ""}${image.url}`,
+    }));
 
   return (
     <section className="pl-[40px] pb-[40px]">

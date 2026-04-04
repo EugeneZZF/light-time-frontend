@@ -13,10 +13,16 @@ import { Category } from "../model/types";
 // };
 
 export const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const CATEGORIES_REVALIDATE_SECONDS = 60 * 60;
 
 const fetchCategories = async (): Promise<Category[]> => {
   try {
-    const response = await fetch(`${baseUrl}/api/admin/categories/tree`);
+    const response = await fetch(`${baseUrl}/api/admin/categories/tree`, {
+      next: {
+        revalidate: CATEGORIES_REVALIDATE_SECONDS,
+        tags: ["categories"],
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Request failed with status ${response.status}`);
@@ -30,6 +36,6 @@ const fetchCategories = async (): Promise<Category[]> => {
 };
 
 export const getCategories = unstable_cache(fetchCategories, ["categories"], {
-  revalidate: 60, // 1 hour
+  revalidate: CATEGORIES_REVALIDATE_SECONDS,
   tags: ["categories"],
 });

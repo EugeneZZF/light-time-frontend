@@ -7,14 +7,16 @@ interface ProjectBigCardProps {
 }
 
 export default function ProjectBigCard({ item }: ProjectBigCardProps) {
+  const imageUrl = item.images[0]?.url ? `${baseUrl}${item.images[0].url}` : "";
+
   return (
     <Link
       href={`/project/${item.slug}`}
       className="group block w-[510px] h-auto max-h-[530px] pt-[10px] pb-[10px]"
     >
       <div
-        className="w-[510px] h-[343px] bg-cover bg-center"
-        style={{ backgroundImage: `url(${baseUrl}${item.images[0].url})` }}
+        className="w-[510px] h-[343px] bg-[#efefef] bg-cover bg-center"
+        style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : undefined}
       ></div>
 
       <div className="flex flex-col mt-[20px] pl-[10px]">

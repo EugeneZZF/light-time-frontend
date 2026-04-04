@@ -1,14 +1,7 @@
 import type { Metadata } from "next";
-import { PT_Sans } from "next/font/google";
 import "swiper/css";
 import "./globals.css";
 import AppChrome from "@/shared/ui/AppChrome";
-
-const ptSans = PT_Sans({
-  weight: ["400", "700"],
-  variable: "--font-pt-sans",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Light Time",
@@ -22,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${ptSans.variable} min-h-screen antialiased`}>
+      <body className="min-h-screen antialiased">
         <AppChrome>{children}</AppChrome>
       </body>
     </html>

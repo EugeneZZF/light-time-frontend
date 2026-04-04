@@ -16,8 +16,10 @@ export default function CatalogContainerClient({
 
   function handleSortTypeChange(type: boolean) {
     setSortType(type);
-    console.log(type);
+    // console.log(type);
+    console.log(categories);
   }
+  console.log(categories);
 
   return (
     <div

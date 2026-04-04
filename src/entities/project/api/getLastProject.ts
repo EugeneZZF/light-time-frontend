@@ -2,7 +2,7 @@ import { Project } from "@/entities/project/model/types";
 
 const LAST_PROJECT_REVALIDATE_SECONDS = 3 * 60 * 60;
 
-export const getLastProject: () => Promise<Project> = async () => {
+export const getLastProject: () => Promise<Project | null> = async () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   if (!baseUrl) {
@@ -14,10 +14,14 @@ export const getLastProject: () => Promise<Project> = async () => {
       next: { revalidate: LAST_PROJECT_REVALIDATE_SECONDS },
     });
 
+    if (response.status === 404) {
+      return null;
+    }
+
     if (!response.ok) {
       throw new Error(`Request failed with status ${response.status}`);
     }
-    // console.log("Fetched latest project:", await response.clone().json());
+
     return (await response.json()) as Project;
   } catch (error) {
     throw new Error(`Failed to fetch latest project: ${error}`);
