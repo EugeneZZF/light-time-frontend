@@ -13,10 +13,31 @@ type ItemPageProps = {
 };
 
 const SPECIFICATION_LABELS: Record<string, string> = {
-  bulbBase: "Тип цоколя",
-  lampCount: "Количество ламп, шт.",
-  power: "Мощность, Вт",
+  baseType: "Тип цоколя",
+  beamAngleDeg: "Угол освещения (°)",
+  climateZone: "Климатическая зона",
+  color: "Цвет",
+  colorRenderingIndexRa: "Индекс цветопередачи (Ra)",
+  colorTemperatureK: "Цветовая температура, K",
+  current: "Ток",
   size: "Размеры, мм",
+  housingColor: "Цвет корпуса",
+  housingMaterial: "Материал корпуса",
+  ingressProtection: "Класс защиты",
+  inputVoltage: "Входное напряжение",
+  lightColor: "Цветность",
+  lightSourceType: "Тип источника света",
+  luminous: "Световой поток, Лм",
+  materials: "Материалы",
+  operatingTemperatureRange: "Диапазон рабочих температур",
+  outputVoltage: "Выходное напряжение",
+  packaging: "Упаковка",
+  power: "Мощность, Вт",
+  productMaterial: "Материал изделия",
+  protectionClass: "Степень защиты",
+  serviceLifeHours: "Время работы, ч",
+  voltageV: "Напряжение, В",
+  weightKg: "Вес, кг",
 };
 
 function formatPrice(value: string) {
