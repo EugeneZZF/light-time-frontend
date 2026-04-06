@@ -24,14 +24,17 @@ export type Product = {
     main: {
       id: number;
       name: string;
+      slug: string;
     } | null;
     subA: {
       id: number;
       name: string;
+      slug: string;
     } | null;
     subB: {
       id: number;
       name: string;
+      slug: string;
     } | null;
   };
   isActive: boolean;

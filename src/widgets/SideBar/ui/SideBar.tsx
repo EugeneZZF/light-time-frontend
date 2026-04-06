@@ -11,43 +11,12 @@ interface SideBarProps {
   products: CatalogProductLookupItem[];
 }
 
-function findCategorySlugById(
-  categories: Category[],
-  categoryId: number | null | undefined,
-): string | null {
-  if (!categoryId) {
-    return null;
-  }
-
-  for (const category of categories) {
-    if (category.id === categoryId) {
-      return category.slug;
-    }
-
-    const nestedCategories = [
-      ...(category.subcategoriesA ?? []),
-      ...(category.SubcategoriesA ?? []),
-      ...(category.subcategoriesB ?? []),
-      ...(category.SubcategoriesB ?? []),
-    ];
-    const nestedSlug = findCategorySlugById(nestedCategories, categoryId);
-
-    if (nestedSlug) {
-      return nestedSlug;
-    }
-  }
-
-  return null;
-}
-
-function resolveProductCategorySlug(
-  categories: Category[],
-  product: CatalogProductLookupItem,
-): string | null {
+function resolveProductCategorySlug(product: CatalogProductLookupItem): string | null {
   return (
-    findCategorySlugById(categories, product.categories.subB?.id) ??
-    findCategorySlugById(categories, product.categories.subA?.id) ??
-    findCategorySlugById(categories, product.categories.main?.id)
+    product.categories.subB?.slug ??
+    product.categories.subA?.slug ??
+    product.categories.main?.slug ??
+    null
   );
 }
 
@@ -71,7 +40,7 @@ export function SideBar({ categories, products }: SideBarProps) {
 
     const product = products.find((item) => item.slug === productSlug);
 
-    return product ? resolveProductCategorySlug(categories, product) : null;
+    return product ? resolveProductCategorySlug(product) : null;
   }, [categories, productSlug, products]);
 
   const activeCategorySlug =
@@ -89,3 +58,4 @@ export function SideBar({ categories, products }: SideBarProps) {
     </div>
   );
 }
+

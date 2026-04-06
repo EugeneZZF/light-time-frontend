@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import Link from "next/link";
@@ -70,35 +70,6 @@ function resolveBreadcrumbState(
   return { items: [] };
 }
 
-function findCategorySlugById(
-  categories: Category[],
-  categoryId: number | null | undefined,
-): string | null {
-  if (!categoryId) {
-    return null;
-  }
-
-  for (const category of categories) {
-    if (category.id === categoryId) {
-      return category.slug;
-    }
-
-    const nestedCategories = [
-      ...(category.subcategoriesA ?? []),
-      ...(category.SubcategoriesA ?? []),
-      ...(category.subcategoriesB ?? []),
-      ...(category.SubcategoriesB ?? []),
-    ];
-    const nestedSlug = findCategorySlugById(nestedCategories, categoryId);
-
-    if (nestedSlug) {
-      return nestedSlug;
-    }
-  }
-
-  return null;
-}
-
 export default function CatalogBreadcrumbs({
   categories,
   products,
@@ -132,40 +103,19 @@ export default function CatalogBreadcrumbs({
       categories: [
         product.categories.main
           ? {
-              href: (() => {
-                const slug = findCategorySlugById(
-                  categories,
-                  product.categories.main?.id,
-                );
-
-                return slug ? `/catalog?categorySlug=${slug}` : undefined;
-              })(),
+              href: `/catalog?categorySlug=${product.categories.main.slug}`,
               label: product.categories.main.name,
             }
           : null,
         product.categories.subA
           ? {
-              href: (() => {
-                const slug = findCategorySlugById(
-                  categories,
-                  product.categories.subA?.id,
-                );
-
-                return slug ? `/catalog?categorySlug=${slug}` : undefined;
-              })(),
+              href: `/catalog?categorySlug=${product.categories.subA.slug}`,
               label: product.categories.subA.name,
             }
           : null,
         product.categories.subB
           ? {
-              href: (() => {
-                const slug = findCategorySlugById(
-                  categories,
-                  product.categories.subB?.id,
-                );
-
-                return slug ? `/catalog?categorySlug=${slug}` : undefined;
-              })(),
+              href: `/catalog?categorySlug=${product.categories.subB.slug}`,
               label: product.categories.subB.name,
             }
           : null,
@@ -184,13 +134,9 @@ export default function CatalogBreadcrumbs({
         aria-label="Breadcrumb"
         className="flex flex-wrap items-center gap-2 text-[14px] text-[#7f7f7f]"
       >
-        <Link href="/" className="transition hover:text-[#ff3333]">
-          Главная
-        </Link>
+        <Link href="/" className="transition hover:text-[#ff3333]">Главная</Link>
         <span className="text-[#c9c9c9]">/</span>
-        <Link href="/catalog" className="transition hover:text-[#ff3333]">
-          Каталог
-        </Link>
+        <Link href="/catalog" className="transition hover:text-[#ff3333]">Каталог</Link>
         {visibleCategories.map((item, index) => (
           <span key={`${item.label}-${index}`} className="contents">
             <span className="text-[#c9c9c9]">/</span>
@@ -216,3 +162,5 @@ export default function CatalogBreadcrumbs({
     </div>
   );
 }
+
+

@@ -14,8 +14,9 @@ export type AdminCategory = {
 };
 
 export type AdminCategoryRef = {
-  id: number;
+  id?: number;
   name: string;
+  slug?: string;
 };
 
 export type AdminBrandRef = {

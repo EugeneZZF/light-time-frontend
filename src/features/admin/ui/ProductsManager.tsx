@@ -411,13 +411,25 @@ export default function ProductsManager() {
           },
           categories: {
             main: mainCategoryRef
-              ? { id: mainCategoryRef.id, name: mainCategoryRef.name }
+              ? {
+                  id: mainCategoryRef.id,
+                  name: mainCategoryRef.name,
+                  slug: mainCategoryRef.slug,
+                }
               : null,
             subA: subACategoryRef
-              ? { id: subACategoryRef.id, name: subACategoryRef.name }
+              ? {
+                  id: subACategoryRef.id,
+                  name: subACategoryRef.name,
+                  slug: subACategoryRef.slug,
+                }
               : null,
             subB: subBCategoryRef
-              ? { id: subBCategoryRef.id, name: subBCategoryRef.name }
+              ? {
+                  id: subBCategoryRef.id,
+                  name: subBCategoryRef.name,
+                  slug: subBCategoryRef.slug,
+                }
               : null,
           },
           brand: brandRef

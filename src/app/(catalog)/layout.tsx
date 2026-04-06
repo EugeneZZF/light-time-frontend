@@ -1,4 +1,4 @@
-import { CatalogBreadcrumbs } from "@/widgets/CatalogBreadcrumbs";
+﻿import { CatalogBreadcrumbs } from "@/widgets/CatalogBreadcrumbs";
 import { SideBar } from "@/widgets/SideBar";
 import { getCategories } from "@/entities/category/api/getCategoryes";
 import { getAllProducts } from "@/entities/product/api/getProductQuery";
@@ -44,3 +44,4 @@ export default async function CatalogLayout({ children }: CatalogLayoutProps) {
     </section>
   );
 }
+
