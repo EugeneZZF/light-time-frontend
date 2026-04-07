@@ -9,12 +9,12 @@ export default async function NewsPage() {
   console.log("Новости:", news);
 
   return (
-    <section>
+    <section className=" h-[1000px] bg-amber-200">
       <h1 className="mb-[18px] text-[28px] leading-[1.18] font-bold tracking-[-0.02em] text-[#00a040]">
         Новости
       </h1>
 
-      <div className="flex flex-wrap gap-x-[32px] gap-y-[24px]">
+      <div className="flex flex-col gap-x-[32px] gap-y-[24px]">
         {news.map((item) => (
           //   <NewsSmallCard key={item.slug} news={item} />
           <Link

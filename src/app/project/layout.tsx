@@ -8,7 +8,7 @@ type CatalogLayoutProps = {
 export default async function CatalogLayout({ children }: CatalogLayoutProps) {
   return (
     <section className="flex flex-col w-full">
-      <div className="w-full pt-[10px]">
+      <div className="w-full pt-[10px] mb-[100px]">
         <ProjectsBreadcrumbs />
         {children}
       </div>

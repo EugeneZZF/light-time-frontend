@@ -60,7 +60,15 @@ export default function CategoryCard({
 
   return (
     <div className="h-auto w-[243px] ">
-      <Link href={`/catalog?categorySlug=${category.slug}`} className="block">
+      <Link
+        href={
+          category.slug === "osveschenie-skladov" ||
+          category.slug === "osveschenie-magazinov"
+            ? `/${category.slug}`
+            : `/catalog?categorySlug=${category.slug}`
+        }
+        className="block"
+      >
         <img
           src={`./category/${category.slug}.jpg`}
           // src={`${baseUrl}${category.imageUrl}`}
