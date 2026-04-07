@@ -1,27 +1,14 @@
-"use client";
-
 import CalcButton from "@/shared/ui/CalcButton";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
-function formatSegmentLabel(segment: string) {
-  const decodedSegment = decodeURIComponent(segment);
+type ProjectsBreadcrumbsProps = {
+  projectTitle?: string | null;
+};
 
-  return decodedSegment
-    .split("-")
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-export default function ProjectsBreadcrumbs() {
-  const pathname = usePathname() ?? "";
-  const segments = pathname.split("/").filter(Boolean);
-  const projectSegments = segments.slice(1);
-  const title =
-    projectSegments.length > 0
-      ? formatSegmentLabel(projectSegments[projectSegments.length - 1])
-      : "Проекты";
+export default function ProjectsBreadcrumbs({
+  projectTitle,
+}: ProjectsBreadcrumbsProps) {
+  const title = projectTitle ?? "Проекты";
 
   return (
     <div className="mb-8 ml-[40px] mr-[40px] flex items-start justify-between gap-6">
@@ -37,12 +24,12 @@ export default function ProjectsBreadcrumbs() {
           <Link href="/project" className="transition hover:text-[#ff3333]">
             Проекты
           </Link>
-          {projectSegments.map((segment, index) => (
-            <span key={`${segment}-${index}`} className="contents">
+          {projectTitle ? (
+            <>
               <span className="text-[#c9c9c9]">/</span>
-              <span>{formatSegmentLabel(segment)}</span>
-            </span>
-          ))}
+              <span>{projectTitle}</span>
+            </>
+          ) : null}
         </nav>
         <h1 className="text-[28px] font-bold leading-[1.15] text-[#009e39]">
           {title}

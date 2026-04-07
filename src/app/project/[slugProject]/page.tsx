@@ -46,7 +46,7 @@ export default async function ProjectDetailPage({
                 {formatDate(project.createdAt)}
               </div>
               <div className="ml-[30px] text-[16px] text-[#505050] indent-6">
-                {project.description}
+                {project.content}
               </div>
             </div>
             <div className="text-[20px] text-[#535353] mt-[30px] ml-[30px] font-bold tracking-wide mb-[20px]">
