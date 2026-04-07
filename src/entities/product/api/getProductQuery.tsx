@@ -9,6 +9,10 @@ export type ProductQueryResponse =
   | {
       items?: Product[];
       products?: Product[];
+      page?: number;
+      limit?: number;
+      total?: number;
+      totalPages?: number;
     };
 
 export type GetProductQueryParams = {
@@ -71,26 +75,44 @@ export function extractProducts(data: ProductQueryResponse): Product[] {
   return [];
 }
 
+function extractTotalPages(data: ProductQueryResponse): number {
+  if (
+    !Array.isArray(data) &&
+    typeof data.totalPages === "number" &&
+    Number.isFinite(data.totalPages)
+  ) {
+    return data.totalPages;
+  }
+
+  return 1;
+}
+
+const fetchProductsResponse = async (
+  params: GetProductQueryParams = {},
+): Promise<ProductQueryResponse> => {
+  const queryString = buildQueryString(params);
+  const response = await fetch(
+    `${baseUrl}/api/catalog/products${queryString ? `?${queryString}` : ""}`,
+    {
+      next: {
+        revalidate: PRODUCTS_REVALIDATE_SECONDS,
+        tags: ["products", "products-query"],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as ProductQueryResponse;
+};
+
 const fetchProductsByQuery = async (
   params: GetProductQueryParams = {},
 ): Promise<Product[]> => {
-  const queryString = buildQueryString(params);
   try {
-    const response = await fetch(
-      `${baseUrl}/api/catalog/products${queryString ? `?${queryString}` : ""}`,
-      {
-        next: {
-          revalidate: PRODUCTS_REVALIDATE_SECONDS,
-          tags: ["products", "products-query"],
-        },
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Request failed with status ${response.status}`);
-    }
-
-    const data: ProductQueryResponse = await response.json();
+    const data = await fetchProductsResponse(params);
     return extractProducts(data);
   } catch (error) {
     console.error("Failed to fetch products:", error);
@@ -98,8 +120,33 @@ const fetchProductsByQuery = async (
   }
 };
 
-const fetchAllProducts = async (): Promise<Product[]> =>
-  fetchProductsByQuery({ limit: 10000 });
+const fetchAllProducts = async (): Promise<Product[]> => {
+  try {
+    const firstPage = await fetchProductsResponse({ page: 1, limit: 100 });
+    const allProducts = extractProducts(firstPage);
+    const totalPages = extractTotalPages(firstPage);
+
+    if (totalPages <= 1) {
+      return allProducts;
+    }
+
+    const remainingPages = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, index) =>
+        fetchProductsResponse({
+          page: index + 2,
+          limit: 100,
+        }),
+      ),
+    );
+
+    return allProducts.concat(
+      ...remainingPages.map((pageResponse) => extractProducts(pageResponse)),
+    );
+  } catch (error) {
+    console.error("Failed to fetch all products:", error);
+    return [];
+  }
+};
 
 export const getProductsByQuery = unstable_cache(
   fetchProductsByQuery,
