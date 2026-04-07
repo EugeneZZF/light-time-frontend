@@ -9,6 +9,7 @@ import {
   RoomType,
   WallType,
 } from "@/entities/calculate/model/types";
+import { Category } from "@/entities/category/model/types";
 import { Product } from "@/entities/product/model/types";
 import { calculateLighting } from "@/features/calculate/model/calculateLighting";
 import Image from "next/image";
@@ -27,6 +28,7 @@ type RoomOption = {
 };
 
 type CalculationPageProps = {
+  categories: Category[];
   products: Product[];
 };
 
@@ -136,6 +138,67 @@ function getProductType(product: Product) {
   return typeof value === "string" ? value : "";
 }
 
+function getFixtureTypeFromProduct(product: Product | null): FixtureType | null {
+  if (!product) {
+    return null;
+  }
+
+  const productType = getProductType(product);
+
+  return (
+    FIXTURE_OPTIONS.find((option) => option.productType === productType)?.value ??
+    null
+  );
+}
+
+function hasLuminousSpecification(product: Product) {
+  return readNumericSpecification(product, "luminous") !== null;
+}
+
+function getChildCategories(category: Category): Category[] {
+  return [
+    ...(category.subcategoriesA ?? []),
+    ...(category.SubcategoriesA ?? []),
+    ...(category.subcategoriesB ?? []),
+    ...(category.SubcategoriesB ?? []),
+  ];
+}
+
+function flattenCategories(categories: Category[]): Category[] {
+  return categories.flatMap((category) => [
+    category,
+    ...flattenCategories(getChildCategories(category)),
+  ]);
+}
+
+function buildCategoryBranchSlugs(
+  category: Category,
+  accumulator: Set<string> = new Set(),
+): Set<string> {
+  accumulator.add(category.slug);
+
+  for (const childCategory of getChildCategories(category)) {
+    buildCategoryBranchSlugs(childCategory, accumulator);
+  }
+
+  return accumulator;
+}
+
+function productBelongsToCategoryBranch(
+  product: Product,
+  categoryBranchSlugs: Set<string>,
+) {
+  return [product.categories.main, product.categories.subA, product.categories.subB]
+    .filter(
+      (
+        category,
+      ): category is NonNullable<
+        Product["categories"]["main"] | Product["categories"]["subA"] | Product["categories"]["subB"]
+      > => Boolean(category),
+    )
+    .some((category) => categoryBranchSlugs.has(category.slug));
+}
+
 function getProductImageUrl(product: Product) {
   const imagePath = product.img[0]?.url;
 
@@ -166,8 +229,11 @@ const selectClassName =
 const unitInputClassName =
   "h-[46px] w-[90px] border border-[#d0d0d0] bg-[linear-gradient(to_bottom,#ffffff,#f4f4f4)] px-[10px] text-[14px] text-black shadow-[inset_0_2px_3px_rgba(0,0,0,0.3)] outline-none focus:shadow-[inset_0_2px_3px_rgba(0,0,0,0.3),0_1px_20px_rgba(255,242,0,0.5)]";
 
-export default function CalculationPage({ products }: CalculationPageProps) {
-  const [fixtureType, setFixtureType] = useState<FixtureType | "">("");
+export default function CalculationPage({
+  categories,
+  products,
+}: CalculationPageProps) {
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState("");
   const [standard, setStandard] = useState<LightingStandard>("EU");
   const [roomType, setRoomType] = useState<RoomType>("work_office");
   const [length, setLength] = useState("");
@@ -195,33 +261,50 @@ export default function CalculationPage({ products }: CalculationPageProps) {
     count: number;
   } | null>(null);
 
-  const selectedFixtureOption = useMemo(() => {
-    if (!fixtureType) {
+  const categoryOptions = useMemo(
+    () =>
+      flattenCategories(categories).filter(
+        (category, index, allCategories) =>
+          category.isActive &&
+          allCategories.findIndex((item) => item.slug === category.slug) === index,
+      ),
+    [categories],
+  );
+
+  const selectedCategory = useMemo(
+    () =>
+      categoryOptions.find((category) => category.slug === selectedCategorySlug) ??
+      null,
+    [categoryOptions, selectedCategorySlug],
+  );
+
+  const categoryBranchSlugs = useMemo(() => {
+    if (!selectedCategory) {
       return null;
     }
 
-    return (
-      FIXTURE_OPTIONS.find((option) => option.value === fixtureType) ?? null
-    );
-  }, [fixtureType]);
+    return buildCategoryBranchSlugs(selectedCategory);
+  }, [selectedCategory]);
 
   const fixtureProducts = useMemo(() => {
-    if (!selectedFixtureOption) {
+    if (!categoryBranchSlugs) {
       return [];
     }
 
     return products
-      .filter(
-        (product) =>
-          getProductType(product) === selectedFixtureOption.productType,
-      )
-      .filter((product) => product.isActive);
-  }, [products, selectedFixtureOption]);
+      .filter((product) => product.isActive)
+      .filter(hasLuminousSpecification)
+      .filter((product) =>
+        productBelongsToCategoryBranch(product, categoryBranchSlugs),
+      );
+  }, [categoryBranchSlugs, products]);
 
   const selectedProduct =
     fixtureProducts.find((product) => product.id === selectedProductId) ??
     fixtureProducts[0] ??
     null;
+  const selectedFixtureType = getFixtureTypeFromProduct(selectedProduct);
+  const calculationFixtureType = selectedFixtureType ?? "wall_ceiling";
 
   const currentLux = LUX_STANDARDS[standard][roomType];
   const selectedRoomLabel =
@@ -240,7 +323,7 @@ export default function CalculationPage({ products }: CalculationPageProps) {
   const numericHeight = Number(height.replace(",", "."));
   const numericWorkSurfaceHeight = Number(workSurfaceHeight.replace(",", "."));
   const isCalculateReady =
-    Boolean(selectedProduct && fixtureType) &&
+    Boolean(selectedProduct && lumensPerLamp > 0) &&
     Number.isFinite(numericLength) &&
     Number.isFinite(numericWidth) &&
     Number.isFinite(numericHeight) &&
@@ -261,32 +344,34 @@ export default function CalculationPage({ products }: CalculationPageProps) {
 
   function handleFixtureTypeChange(value: string) {
     if (!value) {
-      setFixtureType("");
+      setSelectedCategorySlug("");
       setSelectedProductId("");
       return;
     }
 
-    const nextFixtureType = value as FixtureType;
-    const nextFixture = FIXTURE_OPTIONS.find(
-      (option) => option.value === nextFixtureType,
+    const nextCategory = categoryOptions.find(
+      (category) => category.slug === value,
     );
 
-    const nextProducts = nextFixture
+    const nextProducts = nextCategory
       ? products
-          .filter(
-            (product) => getProductType(product) === nextFixture.productType,
-          )
           .filter((product) => product.isActive)
+          .filter(hasLuminousSpecification)
+          .filter((product) =>
+            productBelongsToCategoryBranch(
+              product,
+              buildCategoryBranchSlugs(nextCategory),
+            ),
+          )
       : [];
 
-    setFixtureType(nextFixtureType);
+    setSelectedCategorySlug(value);
     setSelectedProductId(nextProducts[0]?.id ?? "");
   }
 
   function handleCalculate() {
     if (
       !selectedProduct ||
-      !fixtureType ||
       !Number.isFinite(numericLength) ||
       !Number.isFinite(numericWidth) ||
       !Number.isFinite(numericHeight) ||
@@ -314,7 +399,7 @@ export default function CalculationPage({ products }: CalculationPageProps) {
       workSurfaceHeight: Number.isFinite(numericWorkSurfaceHeight)
         ? numericWorkSurfaceHeight
         : 0,
-      fixtureType,
+      fixtureType: calculationFixtureType,
       lumensPerLamp,
       ceiling,
       walls,
@@ -367,7 +452,7 @@ export default function CalculationPage({ products }: CalculationPageProps) {
           "Заявка на точный расчет освещения",
           `Стандарт: ${standard}`,
           `Тип помещения: ${selectedRoomLabel}`,
-          `Тип светильника: ${selectedFixtureOption?.label ?? "-"}`,
+          `Категория: ${selectedCategory?.name ?? "-"}`,
           `Модель: ${selectedProduct?.title ?? "-"}`,
           `Длина: ${length || "-"}`,
           `Ширина: ${width || "-"}`,
@@ -435,16 +520,16 @@ export default function CalculationPage({ products }: CalculationPageProps) {
                 Тип
               </div>
               <select
-                value={fixtureType}
+                value={selectedCategorySlug}
                 onChange={(event) =>
                   handleFixtureTypeChange(event.target.value)
                 }
                 className={`${selectClassName} mt-[14px] w-full`}
               >
                 <option value="">Выберите</option>
-                {FIXTURE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {categoryOptions.map((category) => (
+                  <option key={category.slug} value={category.slug}>
+                    {category.name}
                   </option>
                 ))}
               </select>
