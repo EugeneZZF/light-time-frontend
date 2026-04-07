@@ -9,10 +9,11 @@ export default async function OurProject() {
   });
 
   const imageUrl = project?.images?.[0]?.url;
+  console.log(project, 321321312321312);
 
   return (
     <div className="flex flex-col gap-[15px]">
-      <Link href={"/"} className="w-[500px] h-[188px]">
+      <Link href={`/project/${project?.slug}`} className="w-[500px] h-[188px]">
         <div
           className="w-[500px] h-[178px] bg-[#efefef] bg-cover bg-center flex items-end text-[18px] font-bold text-white p-[10px] relative overflow-hidden"
           style={{

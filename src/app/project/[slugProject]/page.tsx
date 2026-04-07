@@ -24,17 +24,19 @@ export default async function ProjectDetailPage({
     notFound();
   }
 
-  const relatedProjects = (await getProjectsByQuery({ limit: 1000 }))
+  const relatedProjects = (await getProjectsByQuery({ limit: 10 }))
     .filter((candidate) => candidate.slug !== project.slug)
     .slice(0, 4);
 
-  const detailText = project.description?.trim() || project.content?.trim();
+  const detailText = project.content?.trim();
   const projectImages = project.images
     .filter((image) => Boolean(image?.url))
     .map((image) => ({
       sortOrder: image.sortOrder,
       url: `${baseUrl ?? ""}${image.url}`,
     }));
+
+  console.log(project);
 
   return (
     <section className="pl-[40px] pb-[40px]">
@@ -46,7 +48,7 @@ export default async function ProjectDetailPage({
                 {formatDate(project.createdAt)}
               </div>
               <div className="ml-[30px] text-[16px] text-[#505050] indent-6">
-                {project.content}
+                {project.description}
               </div>
             </div>
             <div className="text-[20px] text-[#535353] mt-[30px] ml-[30px] font-bold tracking-wide mb-[20px]">
