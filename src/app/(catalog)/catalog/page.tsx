@@ -3,6 +3,7 @@ import { getCategories } from "@/entities/category/api/getCategoryes";
 import BigCardCatalogCategory from "@/entities/catalog/ui/BigCardCatalogProduct";
 import { getProductsByQuery } from "@/entities/product/api/getProductQuery";
 import { CatalogProductContainer } from "@/widgets/catalogProductContainer";
+import { buildCatalogCategoryLookups } from "@/shared/lib/catalog/lookups";
 
 type CatalogPageProps = {
   searchParams?: Promise<{
@@ -17,25 +18,6 @@ function getChildCategories(category: Category) {
     ...(category.subcategoriesB ?? []),
     ...(category.SubcategoriesB ?? []),
   ].filter((item) => item.isActive);
-}
-
-function findCategoryBySlug(
-  categories: Category[],
-  slug: string,
-): Category | null {
-  for (const category of categories) {
-    if (category.slug === slug) {
-      return category;
-    }
-
-    const nested = findCategoryBySlug(getChildCategories(category), slug);
-
-    if (nested) {
-      return nested;
-    }
-  }
-
-  return null;
 }
 
 function CategoriesGrid({ categories }: { categories: Category[] }) {
@@ -55,12 +37,13 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const activeCategorySlug = resolvedSearchParams?.categorySlug?.trim();
   const categories = await getCategories();
   const rootCategories = categories.filter((category) => category.isActive);
+  const { categoryBySlug } = buildCatalogCategoryLookups(categories);
 
   if (!activeCategorySlug) {
     return <CategoriesGrid categories={rootCategories} />;
   }
 
-  const activeCategory = findCategoryBySlug(categories, activeCategorySlug);
+  const activeCategory = categoryBySlug[activeCategorySlug];
 
   if (!activeCategory) {
     return <CategoriesGrid categories={rootCategories} />;

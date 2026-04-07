@@ -1,108 +1,32 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Category } from "@/entities/category/model/types";
 import { CatalogProductLookupItem } from "@/entities/product/api/getProductQuery";
+import { BreadcrumbItem } from "@/shared/lib/catalog/lookups";
+import Palka from "./Palka";
 
 interface CatalogBreadcrumbsProps {
-  categories: Category[];
-  products: CatalogProductLookupItem[];
+  categoryBreadcrumbsBySlug: Record<string, BreadcrumbItem[]>;
+  productsBySlug: Record<string, CatalogProductLookupItem>;
 }
-
-type BreadcrumbItem = {
-  href?: string;
-  label: string;
-};
-
-type BreadcrumbState = {
-  items: BreadcrumbItem[];
-};
 
 type ProductBreadcrumbState = {
   title?: string;
   categories: BreadcrumbItem[];
 };
 
-function resolveBreadcrumbState(
-  categories: Category[],
-  activeCategorySlug: string | null,
-): BreadcrumbState {
-  if (!activeCategorySlug) {
-    return { items: [] };
-  }
-
-  for (const category of categories) {
-    // LEVEL 1
-    if (category.slug === activeCategorySlug) {
-      return {
-        items: [
-          {
-            href: `/catalog?categorySlug=${category.slug}`,
-            label: category.name,
-          },
-        ],
-      };
-    }
-
-    const subAList = category.subcategoriesA ?? category.SubcategoriesA ?? [];
-
-    for (const subA of subAList) {
-      // LEVEL 2
-      if (subA.slug === activeCategorySlug) {
-        return {
-          items: [
-            {
-              href: `/catalog?categorySlug=${category.slug}`,
-              label: category.name,
-            },
-            {
-              href: `/catalog?categorySlug=${subA.slug}`,
-              label: subA.name,
-            },
-          ],
-        };
-      }
-
-      const subBList = subA.subcategoriesB ?? [];
-      console.log(category);
-      for (const subB of subBList) {
-        // LEVEL 3
-        if (subB.slug === activeCategorySlug) {
-          return {
-            items: [
-              {
-                href: `/catalog?categorySlug=${category.slug}`,
-                label: category.name,
-              },
-              {
-                href: `/catalog?categorySlug=${subA.slug}`,
-                label: subA.name,
-              },
-              {
-                href: `/catalog?categorySlug=${subB.slug}`,
-                label: subB.name,
-              },
-            ],
-          };
-        }
-      }
-    }
-  }
-  console.log("activeCategorySlug:", activeCategorySlug);
-
-  return { items: [] };
-}
-
 export default function CatalogBreadcrumbs({
-  categories,
-  products,
+  categoryBreadcrumbsBySlug,
+  productsBySlug,
 }: CatalogBreadcrumbsProps) {
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const activeCategorySlug = searchParams?.get("categorySlug") ?? null;
-  const { items } = resolveBreadcrumbState(categories, activeCategorySlug);
+  const items = activeCategorySlug
+    ? (categoryBreadcrumbsBySlug[activeCategorySlug] ?? [])
+    : [];
 
   const productSlug = useMemo(() => {
     if (!pathname.startsWith("/product/")) {
@@ -117,7 +41,7 @@ export default function CatalogBreadcrumbs({
       return { categories: [] };
     }
 
-    const product = products.find((item) => item.slug === productSlug);
+    const product = productsBySlug[productSlug];
 
     if (!product) {
       return { categories: [] };
@@ -146,7 +70,7 @@ export default function CatalogBreadcrumbs({
           : null,
       ].filter(Boolean) as BreadcrumbItem[],
     };
-  }, [categories, productSlug, products]);
+  }, [productSlug, productsBySlug]);
 
   const title = productSlug
     ? (productState.title ?? "")
@@ -162,13 +86,15 @@ export default function CatalogBreadcrumbs({
         <Link href="/" className="transition hover:text-[#ff3333]">
           Главная
         </Link>
-        <span className="text-[#c9c9c9]">/</span>
+        {/* <span className="text-[#c9c9c9]">/</span> */}
+        <Palka />
         <Link href="/catalog" className="transition hover:text-[#ff3333]">
           Каталог
         </Link>
         {visibleCategories.map((item, index) => (
           <span key={`${item.label}-${index}`} className="contents">
-            <span className="text-[#c9c9c9]">/</span>
+            {/* <span className="text-[#c9c9c9]">/</span> */}
+            <Palka />
             {item.href ? (
               <Link
                 href={item.href}

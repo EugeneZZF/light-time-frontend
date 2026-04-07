@@ -1,6 +1,7 @@
 "use client";
 
 import CalcButton from "@/shared/ui/CalcButton";
+import Palka from "@/widgets/CatalogBreadcrumbs/ui/Palka";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -49,7 +50,7 @@ export default function ProjectsBreadcrumbs() {
         const data = (await response.json()) as ProjectLookupResponse;
         const projects = Array.isArray(data)
           ? data
-          : data.items ?? data.projects ?? data.data ?? [];
+          : (data.items ?? data.projects ?? data.data ?? []);
         const matchedProject = projects.find(
           (project) => project.slug === slugProject,
         );
@@ -71,7 +72,7 @@ export default function ProjectsBreadcrumbs() {
     };
   }, [isProjectDetailPage, slugProject]);
 
-  const title = isProjectDetailPage ? projectTitle ?? "" : "Проекты";
+  const title = isProjectDetailPage ? (projectTitle ?? "") : "Проекты";
 
   return (
     <div className="mb-8 ml-[40px] mr-[40px] flex items-start justify-between gap-6">
@@ -83,13 +84,15 @@ export default function ProjectsBreadcrumbs() {
           <Link href="/" className="transition hover:text-[#ff3333]">
             Главная
           </Link>
-          <span className="text-[#c9c9c9]">/</span>
+          {/* <span className="text-[#c9c9c9]">/</span> */}
+          <Palka />
           <Link href="/project" className="transition hover:text-[#ff3333]">
             Проекты
           </Link>
           {isProjectDetailPage && projectTitle ? (
             <>
-              <span className="text-[#c9c9c9]">/</span>
+              {/* <span className="text-[#c9c9c9]">/</span> */}
+              <Palka />
               <span>{projectTitle}</span>
             </>
           ) : null}
