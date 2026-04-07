@@ -2,7 +2,7 @@ import { unstable_cache } from "next/cache";
 import { Product } from "../model/types";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-const PRODUCTS_REVALIDATE_SECONDS = 60 * 60;
+const PRODUCTS_REVALIDATE_SECONDS = 60 * 10;
 
 export type ProductQueryResponse =
   | Product[]
@@ -99,7 +99,7 @@ const fetchProductsByQuery = async (
 };
 
 const fetchAllProducts = async (): Promise<Product[]> =>
-  fetchProductsByQuery({ limit: 1000 });
+  fetchProductsByQuery({ limit: 10000 });
 
 export const getProductsByQuery = unstable_cache(
   fetchProductsByQuery,
@@ -110,7 +110,11 @@ export const getProductsByQuery = unstable_cache(
   },
 );
 
-export const getAllProducts = unstable_cache(fetchAllProducts, ["products-all"], {
-  revalidate: PRODUCTS_REVALIDATE_SECONDS,
-  tags: ["products", "products-all"],
-});
+export const getAllProducts = unstable_cache(
+  fetchAllProducts,
+  ["products-all"],
+  {
+    revalidate: PRODUCTS_REVALIDATE_SECONDS,
+    tags: ["products", "products-all"],
+  },
+);

@@ -1,8 +1,24 @@
-import { getAllProducts } from "./getProductQuery";
 import { Product } from "../model/types";
 
-export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const products = await getAllProducts();
+const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
 
-  return products.find((product) => product.slug === slug) ?? null;
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  try {
+    const response = await fetch(`${baseUrl}/api/catalog/products/${slug}`, {
+      next: { revalidate: 60 * 10 },
+    });
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    return (await response.json()) as Product;
+  } catch (error) {
+    console.error(`Failed to fetch product "${slug}":`, error);
+    return null;
+  }
 }
