@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { CatalogProductLookupItem } from "@/entities/product/api/getProductQuery";
@@ -21,6 +21,7 @@ export default function CatalogBreadcrumbs({
   categoryBreadcrumbsBySlug,
   productsBySlug,
 }: CatalogBreadcrumbsProps) {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const activeCategorySlug = searchParams?.get("categorySlug") ?? null;
@@ -36,12 +37,50 @@ export default function CatalogBreadcrumbs({
     return pathname.split("/product/")[1] ?? null;
   }, [pathname]);
 
+  const [resolvedProduct, setResolvedProduct] =
+    useState<CatalogProductLookupItem | null>(null);
+
+  useEffect(() => {
+    if (!productSlug || productsBySlug[productSlug]) {
+      setResolvedProduct(null);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadProduct = async () => {
+      try {
+        const response = await fetch(`${baseUrl}/api/catalog/products/${productSlug}`);
+
+        if (!response.ok) {
+          return;
+        }
+
+        const product = (await response.json()) as CatalogProductLookupItem;
+
+        if (!isCancelled) {
+          setResolvedProduct(product);
+        }
+      } catch {
+        if (!isCancelled) {
+          setResolvedProduct(null);
+        }
+      }
+    };
+
+    void loadProduct();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [baseUrl, productSlug, productsBySlug]);
+
   const productState = useMemo<ProductBreadcrumbState>(() => {
     if (!productSlug) {
       return { categories: [] };
     }
 
-    const product = productsBySlug[productSlug];
+    const product = productsBySlug[productSlug] ?? resolvedProduct;
 
     if (!product) {
       return { categories: [] };
@@ -70,7 +109,7 @@ export default function CatalogBreadcrumbs({
           : null,
       ].filter(Boolean) as BreadcrumbItem[],
     };
-  }, [productSlug, productsBySlug]);
+  }, [productSlug, productsBySlug, resolvedProduct]);
 
   const title = productSlug
     ? (productState.title ?? "")
