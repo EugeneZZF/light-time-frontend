@@ -34,6 +34,7 @@ function resolveBreadcrumbState(
   }
 
   for (const category of categories) {
+    // LEVEL 1
     if (category.slug === activeCategorySlug) {
       return {
         items: [
@@ -45,27 +46,51 @@ function resolveBreadcrumbState(
       };
     }
 
-    const subcategories =
-      category.subcategoriesA ?? category.SubcategoriesA ?? [];
-    const matchedSubcategory = subcategories.find(
-      (subcategory) => subcategory.slug === activeCategorySlug,
-    );
+    const subAList = category.subcategoriesA ?? category.SubcategoriesA ?? [];
 
-    if (matchedSubcategory) {
-      return {
-        items: [
-          {
-            href: `/catalog?categorySlug=${category.slug}`,
-            label: category.name,
-          },
-          {
-            href: `/catalog?categorySlug=${matchedSubcategory.slug}`,
-            label: matchedSubcategory.name,
-          },
-        ],
-      };
+    for (const subA of subAList) {
+      // LEVEL 2
+      if (subA.slug === activeCategorySlug) {
+        return {
+          items: [
+            {
+              href: `/catalog?categorySlug=${category.slug}`,
+              label: category.name,
+            },
+            {
+              href: `/catalog?categorySlug=${subA.slug}`,
+              label: subA.name,
+            },
+          ],
+        };
+      }
+
+      const subBList = subA.subcategoriesB ?? [];
+      console.log(category);
+      for (const subB of subBList) {
+        // LEVEL 3
+        if (subB.slug === activeCategorySlug) {
+          return {
+            items: [
+              {
+                href: `/catalog?categorySlug=${category.slug}`,
+                label: category.name,
+              },
+              {
+                href: `/catalog?categorySlug=${subA.slug}`,
+                label: subA.name,
+              },
+              {
+                href: `/catalog?categorySlug=${subB.slug}`,
+                label: subB.name,
+              },
+            ],
+          };
+        }
+      }
     }
   }
+  console.log("activeCategorySlug:", activeCategorySlug);
 
   return { items: [] };
 }
@@ -134,9 +159,13 @@ export default function CatalogBreadcrumbs({
         aria-label="Breadcrumb"
         className="flex flex-wrap items-center gap-2 text-[14px] text-[#7f7f7f]"
       >
-        <Link href="/" className="transition hover:text-[#ff3333]">Главная</Link>
+        <Link href="/" className="transition hover:text-[#ff3333]">
+          Главная
+        </Link>
         <span className="text-[#c9c9c9]">/</span>
-        <Link href="/catalog" className="transition hover:text-[#ff3333]">Каталог</Link>
+        <Link href="/catalog" className="transition hover:text-[#ff3333]">
+          Каталог
+        </Link>
         {visibleCategories.map((item, index) => (
           <span key={`${item.label}-${index}`} className="contents">
             <span className="text-[#c9c9c9]">/</span>
@@ -162,5 +191,3 @@ export default function CatalogBreadcrumbs({
     </div>
   );
 }
-
-
