@@ -4,15 +4,19 @@ import { useState } from "react";
 import { addCartItem } from "@/shared/lib/cart/localStorage";
 
 interface ProductPurchasePanelProps {
-  productId: string;
+  productSlug: string;
   inStock: boolean;
   price: string;
+  hasDiscount: boolean;
+  new_price: boolean;
 }
 
 export default function ProductPurchasePanel({
-  productId,
+  productSlug,
   inStock,
   price,
+  hasDiscount,
+  new_price,
 }: ProductPurchasePanelProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
@@ -28,14 +32,14 @@ export default function ProductPurchasePanel({
   };
 
   const handleAddToCart = () => {
-    addCartItem(productId, quantity);
+    addCartItem(productSlug, quantity);
     setIsAdded(true);
   };
 
   return (
     <>
       <div className="flex items-start gap-[18px]">
-        <div
+        {/* <div
           className="inline-flex h-[43px] w-auto items-center pl-[24px]
             pr-[10px] font-bold text-[32px] leading-[32px] whitespace-nowrap
             text-white shadow-[0_4px_12px_rgba(0,0,0,0.18)]
@@ -47,7 +51,43 @@ export default function ProductPurchasePanel({
           }}
         >
           {price} &#8381;
-        </div>
+        </div> */}
+
+        {hasDiscount ? (
+          <div className="flex flex-col font-bold text-[32px] leading-[32px]">
+            <div
+              className="inline-flex h-[43px] w-auto items-center pl-[24px]
+            pr-[10px]  whitespace-nowrap
+            text-white shadow-[0_4px_12px_rgba(0,0,0,0.18)]
+            [clip-path:polygon(18px_0,100%_0,100%_100%,18px_100%,0_50%)]
+            bg-gradient-to-b from-[#ff9900] to-[#ff0000]"
+              // style={{
+              //   background: "linear-gradient(to right, #00823f 0%, #00ae38 100%)",
+              //   backgroundImage:
+              //     "-webkit-linear-gradient(top left, #00823f 0%, #00ae38 100%)",
+              // }}
+            >
+              {new_price} &#8381;
+            </div>
+            <div className="pl-[24px] line-through mt-[10px]">
+              {price} &#8381;
+            </div>
+          </div>
+        ) : (
+          <div
+            className="inline-flex h-[43px] w-auto items-center pl-[24px]
+            pr-[10px] font-bold text-[32px] leading-[32px] whitespace-nowrap
+            text-white shadow-[0_4px_12px_rgba(0,0,0,0.18)]
+            [clip-path:polygon(18px_0,100%_0,100%_100%,18px_100%,0_50%)]"
+            style={{
+              background: "linear-gradient(to right, #00823f 0%, #00ae38 100%)",
+              backgroundImage:
+                "-webkit-linear-gradient(top left, #00823f 0%, #00ae38 100%)",
+            }}
+          >
+            {price} &#8381;
+          </div>
+        )}
 
         <div className="flex items-start gap-[6px] pt-[5px]">
           <div className="flex h-[32px] w-[43px] items-center border border-[#d8d8d8] bg-white pl-[8px] text-[18px] leading-none text-black">
@@ -89,7 +129,9 @@ export default function ProductPurchasePanel({
       ) : null}
 
       <p className="mt-[14px] text-[16px] text-black">
-        {inStock ? "В наличии: товар есть на складе" : "В наличии: нет в наличии"}
+        {inStock
+          ? "В наличии: товар есть на складе"
+          : "В наличии: нет в наличии"}
       </p>
     </>
   );

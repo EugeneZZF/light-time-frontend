@@ -1,5 +1,5 @@
 export type CartItem = {
-  id: string;
+  slug: string;
   quantity: number;
 };
 
@@ -21,9 +21,11 @@ function normalizeCartItems(value: unknown): CartItem[] {
         return null;
       }
 
-      const { id, quantity } = item as Partial<CartItem>;
+      const candidate = item as Partial<CartItem> & { id?: string };
+      const slug = candidate.slug ?? candidate.id;
+      const { quantity } = candidate;
 
-      if (typeof id !== "string" || id.trim().length === 0) {
+      if (typeof slug !== "string" || slug.trim().length === 0) {
         return null;
       }
 
@@ -34,7 +36,7 @@ function normalizeCartItems(value: unknown): CartItem[] {
       }
 
       return {
-        id,
+        slug,
         quantity: Math.floor(normalizedQuantity),
       };
     })
@@ -68,15 +70,15 @@ export function saveCartItems(items: CartItem[]) {
   window.dispatchEvent(new Event(CART_UPDATED_EVENT));
 }
 
-export function addCartItem(productId: string, quantity = 1) {
+export function addCartItem(productSlug: string, quantity = 1) {
   const normalizedQuantity = Math.max(1, Math.floor(quantity));
   const currentItems = getCartItems();
-  const existingItem = currentItems.find((item) => item.id === productId);
+  const existingItem = currentItems.find((item) => item.slug === productSlug);
 
   if (existingItem) {
     saveCartItems(
       currentItems.map((item) =>
-        item.id === productId
+        item.slug === productSlug
           ? { ...item, quantity: item.quantity + normalizedQuantity }
           : item,
       ),
@@ -88,14 +90,14 @@ export function addCartItem(productId: string, quantity = 1) {
   saveCartItems([
     ...currentItems,
     {
-      id: productId,
+      slug: productSlug,
       quantity: normalizedQuantity,
     },
   ]);
 }
 
-export function removeCartItem(productId: string) {
-  saveCartItems(getCartItems().filter((item) => item.id !== productId));
+export function removeCartItem(productSlug: string) {
+  saveCartItems(getCartItems().filter((item) => item.slug !== productSlug));
 }
 
 export function clearCart() {

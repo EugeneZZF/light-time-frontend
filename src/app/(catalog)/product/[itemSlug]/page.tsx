@@ -112,11 +112,11 @@ export default async function ItemPage({ params }: ItemPageProps) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-  const price = getVisiblePrice(
-    item.price,
-    item.discount.new_price,
-    item.discount.hasDiscount,
-  );
+  // const price = getVisiblePrice(
+  //   item.price,
+  //   item.discount.new_price,
+  //   item.discount.hasDiscount,
+  // );
   const specs = normalizeSpecifications(item.specifications);
   const productImages = item.img.map((image) => ({
     sortOrder: image.sortOrder,
@@ -128,6 +128,7 @@ export default async function ItemPage({ params }: ItemPageProps) {
     .filter(relatedCategoryFilter)
     .slice(0, 4);
 
+  console.log(item);
   return (
     <section className="ml-[20px] pr-[20px] pb-[40px]">
       <div className="flex items-start gap-[38px]">
@@ -139,9 +140,11 @@ export default async function ItemPage({ params }: ItemPageProps) {
 
         <div className="flex-1 pt-[1px]">
           <ProductPurchasePanel
-            productId={item.id}
+            productSlug={item.slug}
             inStock={item.inStock}
-            price={formatPrice(price)}
+            price={formatPrice(item.price)}
+            hasDiscount={item.discount.hasDiscount}
+            new_price={formatPrice(item.discount.new_price)}
           />
 
           {specs.length > 0 ? (

@@ -8,6 +8,7 @@ import {
   clearCart,
   getCartItems,
   removeCartItem,
+  saveCartItems,
   subscribeToCartUpdates,
 } from "@/shared/lib/cart/localStorage";
 
@@ -94,14 +95,22 @@ async function loadProducts(cartItems: CartItem[]) {
 
   const data: ProductQueryResponse = await response.json();
   const products = extractProducts(data);
+  const normalizedCartItems: CartItem[] = [];
 
-  return cartItems
+  const resolvedProducts = cartItems
     .map((item) => {
-      const product = products.find((entry) => entry.id === item.id);
+      const product = products.find(
+        (entry) => entry.slug === item.slug || entry.id === item.slug,
+      );
 
       if (!product) {
         return null;
       }
+
+      normalizedCartItems.push({
+        slug: product.slug,
+        quantity: item.quantity,
+      });
 
       return {
         product,
@@ -109,6 +118,15 @@ async function loadProducts(cartItems: CartItem[]) {
       };
     })
     .filter((item): item is CartProduct => item !== null);
+
+  if (
+    normalizedCartItems.length === cartItems.length &&
+    normalizedCartItems.some((item, index) => item.slug !== cartItems[index]?.slug)
+  ) {
+    saveCartItems(normalizedCartItems);
+  }
+
+  return resolvedProducts;
 }
 
 function InputField({
@@ -441,10 +459,10 @@ export default function CartContent() {
                           <button
                             type="button"
                             onClick={() => {
-                              removeCartItem(product.id);
+                              removeCartItem(product.slug);
                               setItems((current) =>
                                 current.filter(
-                                  (item) => item.product.id !== product.id,
+                                  (item) => item.product.slug !== product.slug,
                                 ),
                               );
                             }}
