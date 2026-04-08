@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Product } from "@/entities/product/model/types";
 
 export default function SmallCardProduct({ product }: { product: Product }) {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
+  const imageUrl = product.img[0]?.url ? `${baseUrl}${product.img[0].url}` : "";
 
   return (
     <Link href={`/product/${product.slug}`}>
@@ -13,9 +14,7 @@ export default function SmallCardProduct({ product }: { product: Product }) {
         hover:border-[rgba(255,51,51,0.1)]
         hover:shadow-[0_0_10px_rgba(255,0,0,0.2)]
         transition cursor-pointer"
-        style={{
-          backgroundImage: `url(${baseUrl}${product.img[0].url})`,
-        }}
+        style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : undefined}
       >
         <div className="flex items-end relative w-full h-full pl-[10px] pr-[10px] pb-[5px] justify-between">
           <p className="w-[145px] text-[14px] text-[#333333]">

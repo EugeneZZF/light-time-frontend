@@ -128,7 +128,6 @@ export default async function ItemPage({ params }: ItemPageProps) {
     .filter(relatedCategoryFilter)
     .slice(0, 4);
 
-  console.log(item);
   return (
     <section className="ml-[20px] pr-[20px] pb-[40px]">
       <div className="flex items-start gap-[38px]">
