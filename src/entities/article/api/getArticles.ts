@@ -31,7 +31,7 @@ function extractArticles(data: ArticlesResponse): Article[] {
   return [];
 }
 
-async function fetchArticles(): Promise<Article[]> {
+export async function fetchArticles(): Promise<Article[]> {
   try {
     const response = await fetch(`${baseUrl}/api/articles`, {
       next: { revalidate: 60 * 10 },
