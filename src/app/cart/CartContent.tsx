@@ -8,7 +8,6 @@ import {
   clearCart,
   getCartItems,
   removeCartItem,
-  saveCartItems,
   subscribeToCartUpdates,
 } from "@/shared/lib/cart/localStorage";
 
@@ -18,29 +17,6 @@ type CartProduct = {
 };
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-
-type ProductQueryResponse =
-  | Product[]
-  | {
-      items?: Product[];
-      products?: Product[];
-    };
-
-function extractProducts(data: ProductQueryResponse): Product[] {
-  if (Array.isArray(data)) {
-    return data;
-  }
-
-  if (Array.isArray(data.items)) {
-    return data.items;
-  }
-
-  if (Array.isArray(data.products)) {
-    return data.products;
-  }
-
-  return [];
-}
 
 function parsePrice(value: string) {
   return Number(
@@ -82,51 +58,43 @@ function getProductImageUrl(product: Product) {
   return `${baseUrl}${imagePath}`;
 }
 
-async function loadProducts(cartItems: CartItem[]) {
-  if (cartItems.length === 0) {
-    return [];
-  }
+async function fetchProductBySlug(slug: string) {
+  const response = await fetch(
+    `${baseUrl}/api/catalog/products/${encodeURIComponent(slug)}`,
+  );
 
-  const response = await fetch(`${baseUrl}/api/catalog/products?limit=1000`);
+  if (response.status === 404) {
+    return null;
+  }
 
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
   }
 
-  const data: ProductQueryResponse = await response.json();
-  const products = extractProducts(data);
-  const normalizedCartItems: CartItem[] = [];
+  return (await response.json()) as Product;
+}
 
-  const resolvedProducts = cartItems
-    .map((item) => {
-      const product = products.find(
-        (entry) => entry.slug === item.slug || entry.id === item.slug,
-      );
+async function loadProducts(cartItems: CartItem[]) {
+  if (cartItems.length === 0) {
+    return [];
+  }
+
+  const products = await Promise.all(
+    cartItems.map(async (item) => {
+      const product = await fetchProductBySlug(item.slug);
 
       if (!product) {
         return null;
       }
 
-      normalizedCartItems.push({
-        slug: product.slug,
-        quantity: item.quantity,
-      });
-
       return {
         product,
         quantity: item.quantity,
       };
-    })
-    .filter((item): item is CartProduct => item !== null);
+    }),
+  );
 
-  if (
-    normalizedCartItems.length === cartItems.length &&
-    normalizedCartItems.some((item, index) => item.slug !== cartItems[index]?.slug)
-  ) {
-    saveCartItems(normalizedCartItems);
-  }
-
-  return resolvedProducts;
+  return products.filter((item): item is CartProduct => item !== null);
 }
 
 function InputField({
