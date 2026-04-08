@@ -8,7 +8,7 @@ interface ProductPurchasePanelProps {
   inStock: boolean;
   price: string;
   hasDiscount: boolean;
-  new_price: boolean;
+  new_price: string | null;
 }
 
 export default function ProductPurchasePanel({
@@ -53,7 +53,7 @@ export default function ProductPurchasePanel({
           {price} &#8381;
         </div> */}
 
-        {hasDiscount ? (
+        {hasDiscount && new_price ? (
           <div className="flex flex-col font-bold text-[32px] leading-[32px]">
             <div
               className="inline-flex h-[43px] w-auto items-center pl-[24px]

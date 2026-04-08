@@ -144,7 +144,9 @@ export default async function ItemPage({ params }: ItemPageProps) {
             inStock={item.inStock}
             price={formatPrice(item.price)}
             hasDiscount={item.discount.hasDiscount}
-            new_price={formatPrice(item.discount.new_price)}
+            new_price={
+              item.discount.new_price ? formatPrice(item.discount.new_price) : null
+            }
           />
 
           {specs.length > 0 ? (
