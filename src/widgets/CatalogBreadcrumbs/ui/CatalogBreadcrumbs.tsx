@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { CatalogProductLookupItem } from "@/entities/product/api/getProductQuery";
 import { BreadcrumbItem } from "@/shared/lib/catalog/lookups";
+import { useResolvedCatalogProduct } from "@/shared/lib/catalog/useResolvedCatalogProduct";
 import Palka from "./Palka";
 
 interface CatalogBreadcrumbsProps {
@@ -21,95 +21,42 @@ export default function CatalogBreadcrumbs({
   categoryBreadcrumbsBySlug,
   productsBySlug,
 }: CatalogBreadcrumbsProps) {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-  const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const activeCategorySlug = searchParams?.get("categorySlug") ?? null;
   const items = activeCategorySlug
     ? (categoryBreadcrumbsBySlug[activeCategorySlug] ?? [])
     : [];
+  const { productSlug, lookupItem: productFromLookup, resolvedProduct } =
+    useResolvedCatalogProduct({
+      lookupBySlug: productsBySlug,
+    });
 
-  const productSlug = useMemo(() => {
-    if (!pathname.startsWith("/product/")) {
-      return null;
-    }
-
-    return pathname.split("/product/")[1] ?? null;
-  }, [pathname]);
-
-  const [resolvedProduct, setResolvedProduct] =
-    useState<CatalogProductLookupItem | null>(null);
-
-  useEffect(() => {
-    if (!productSlug || productsBySlug[productSlug]) {
-      setResolvedProduct(null);
-      return;
-    }
-
-    let isCancelled = false;
-
-    const loadProduct = async () => {
-      try {
-        const response = await fetch(`${baseUrl}/api/catalog/products/${productSlug}`);
-
-        if (!response.ok) {
-          return;
-        }
-
-        const product = (await response.json()) as CatalogProductLookupItem;
-
-        if (!isCancelled) {
-          setResolvedProduct(product);
-        }
-      } catch {
-        if (!isCancelled) {
-          setResolvedProduct(null);
-        }
+  const product = productFromLookup ?? resolvedProduct;
+  const productState: ProductBreadcrumbState = product
+    ? {
+        title: product.title,
+        categories: [
+          product.categories.main
+            ? {
+                href: `/catalog?categorySlug=${product.categories.main.slug}`,
+                label: product.categories.main.name,
+              }
+            : null,
+          product.categories.subA
+            ? {
+                href: `/catalog?categorySlug=${product.categories.subA.slug}`,
+                label: product.categories.subA.name,
+              }
+            : null,
+          product.categories.subB
+            ? {
+                href: `/catalog?categorySlug=${product.categories.subB.slug}`,
+                label: product.categories.subB.name,
+              }
+            : null,
+        ].filter(Boolean) as BreadcrumbItem[],
       }
-    };
-
-    void loadProduct();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [baseUrl, productSlug, productsBySlug]);
-
-  const productState = useMemo<ProductBreadcrumbState>(() => {
-    if (!productSlug) {
-      return { categories: [] };
-    }
-
-    const product = productsBySlug[productSlug] ?? resolvedProduct;
-
-    if (!product) {
-      return { categories: [] };
-    }
-
-    return {
-      title: product.title,
-      categories: [
-        product.categories.main
-          ? {
-              href: `/catalog?categorySlug=${product.categories.main.slug}`,
-              label: product.categories.main.name,
-            }
-          : null,
-        product.categories.subA
-          ? {
-              href: `/catalog?categorySlug=${product.categories.subA.slug}`,
-              label: product.categories.subA.name,
-            }
-          : null,
-        product.categories.subB
-          ? {
-              href: `/catalog?categorySlug=${product.categories.subB.slug}`,
-              label: product.categories.subB.name,
-            }
-          : null,
-      ].filter(Boolean) as BreadcrumbItem[],
-    };
-  }, [productSlug, productsBySlug, resolvedProduct]);
+    : { categories: [] };
 
   const title = productSlug
     ? (productState.title ?? "")

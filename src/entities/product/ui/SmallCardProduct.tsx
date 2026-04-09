@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { Product } from "@/entities/product/model/types";
+import React from "react";
 
-export default function SmallCardProduct({ product }: { product: Product }) {
+export default React.memo(function SmallCardProduct({
+  product,
+}: {
+  product: Product;
+}) {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
   const imageUrl = product.img[0]?.url ? `${baseUrl}${product.img[0].url}` : "";
 
@@ -37,4 +42,4 @@ export default function SmallCardProduct({ product }: { product: Product }) {
       </div>
     </Link>
   );
-}
+});

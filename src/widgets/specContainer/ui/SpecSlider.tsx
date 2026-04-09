@@ -11,10 +11,12 @@ interface SpecSliderProps {
   productSale: Product[];
 }
 
+const swiperModules = [Autoplay];
+
 export default function SpecSlider({ productSale }: SpecSliderProps) {
   return (
     <Swiper
-      modules={[Autoplay]}
+      modules={swiperModules}
       spaceBetween={0}
       slidesPerView={2}
       autoplay={{

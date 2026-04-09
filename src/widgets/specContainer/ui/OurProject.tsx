@@ -9,7 +9,7 @@ export default async function OurProject() {
   });
 
   const imageUrl = project?.images?.[0]?.url;
-  console.log(project, 321321312321312);
+  // console.log(project, 321321312321312);
 
   return (
     <div className="flex flex-col gap-[15px]">

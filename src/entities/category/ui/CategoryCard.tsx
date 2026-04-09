@@ -4,17 +4,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { animated, useSpring } from "@react-spring/web";
 import Link from "next/link";
 import { Category } from "../model/types";
-import { baseUrl } from "../api/getCategoryes";
+// import { baseUrl } from "../api/getCategoryes";
+import React from "react";
 
 interface CategoryCardProps {
   category: Category;
   catalogType: boolean;
 }
-
-export default function CategoryCard({
-  category,
-  catalogType,
-}: CategoryCardProps) {
+function CategoryCard({ category, catalogType }: CategoryCardProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
 
@@ -114,3 +111,13 @@ export default function CategoryCard({
     </div>
   );
 }
+
+function areEqual(prev: CategoryCardProps, next: CategoryCardProps) {
+  console.log("compare:", prev, next);
+
+  return (
+    prev.category === next.category && prev.catalogType === next.catalogType
+  );
+}
+
+export default React.memo(CategoryCard, areEqual);

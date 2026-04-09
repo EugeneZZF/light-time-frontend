@@ -14,7 +14,7 @@ export async function getNews(): Promise<News[]> {
 
     return (await response.json()) as News[];
   } catch (error) {
-    console.error("Failed to fetch news:", error);
+    // console.error("Failed to fetch news:", error);
     return [];
   }
 }
@@ -35,7 +35,7 @@ export async function getNewsBySlug(slug: string): Promise<News | null> {
 
     return (await response.json()) as News;
   } catch (error) {
-    console.error(`Failed to fetch news "${slug}":`, error);
+    // console.error(`Failed to fetch news "${slug}":`, error);
     return null;
   }
 }
@@ -52,7 +52,7 @@ export async function getLatestNews(limit: number = 4): Promise<News[]> {
 
     return (await response.json()) as News[];
   } catch (error) {
-    console.error("Failed to fetch latest news:", error);
+    // console.error("Failed to fetch latest news:", error);
     return [];
   }
 }

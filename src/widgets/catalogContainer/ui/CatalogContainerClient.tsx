@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Category } from "@/entities/category/model/types";
 import CategoryContainer from "./CategoryContainer";
+import { useCallback } from "react";
 
 interface CatalogContainerClientProps {
   categories: Category[];
@@ -14,12 +15,13 @@ export default function CatalogContainerClient({
   const [sortType, setSortType] = useState(true);
   const [catalogType, setCatalogType] = useState(false);
 
-  function handleSortTypeChange(type: boolean) {
+  const handleSortTypeChange = useCallback((type: boolean) => {
     setSortType(type);
-    // console.log(type);
-    console.log(categories);
-  }
-  console.log(categories);
+  }, []);
+  const toggleCatalogType = useCallback(() => {
+    setCatalogType((prev) => !prev);
+  }, []);
+  // console.log(categories);
 
   return (
     <div
@@ -50,7 +52,7 @@ export default function CatalogContainerClient({
           <img src="./main/spread.png" alt="" />
           <p
             onClick={() => {
-              setCatalogType((prev) => !prev);
+              toggleCatalogType();
             }}
             className="hover:text-[#f33]"
           >

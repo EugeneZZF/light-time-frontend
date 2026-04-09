@@ -24,10 +24,10 @@ const fetchProducts = async (limit: number = 4): Promise<Product[]> => {
       throw new Error(`Request failed with status ${response.status}`);
     }
 
-    console.log("Fetched products:", await response.clone().json());
+    // console.log("Fetched products:", await response.clone().json());
     return response.json();
   } catch (error) {
-    console.error("Failed to fetch latest products:", error);
+    // console.error("Failed to fetch latest products:", error);
     return [];
   }
 };

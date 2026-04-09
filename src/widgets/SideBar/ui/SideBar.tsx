@@ -1,86 +1,108 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Category } from "@/entities/category/model/types";
 import SideBarLink from "./SideBarLink";
-import { CatalogProductLookupItem } from "@/entities/product/api/getProductQuery";
+import { resolveProductCategorySlug } from "@/shared/lib/catalog/lookups";
+import { useResolvedCatalogProduct } from "@/shared/lib/catalog/useResolvedCatalogProduct";
 
 interface SideBarProps {
   categories: Category[];
   products: Record<string, string>;
 }
 
+const EMPTY_CATEGORIES: Category[] = [];
+
+function getSubcategoriesA(category: Category): Category[] {
+  return category.subcategoriesA ?? category.SubcategoriesA ?? EMPTY_CATEGORIES;
+}
+
+function getSubcategoriesB(category: Category): Category[] {
+  return category.subcategoriesB ?? category.SubcategoriesB ?? EMPTY_CATEGORIES;
+}
+
+function hasActiveDescendant(
+  category: Category,
+  activeCategorySlug: string | null,
+): boolean {
+  if (!activeCategorySlug) {
+    return false;
+  }
+
+  return getSubcategoriesA(category).some((subcategory) => {
+    if (subcategory.slug === activeCategorySlug) {
+      return true;
+    }
+
+    return getSubcategoriesB(subcategory).some(
+      (subSubcategory) => subSubcategory.slug === activeCategorySlug,
+    );
+  });
+}
+
+function buildCategoryHref(
+  searchParamsString: string,
+  categorySlug: string,
+  isActive: boolean,
+): string {
+  const nextParams = new URLSearchParams(searchParamsString);
+
+  if (isActive) {
+    nextParams.delete("categorySlug");
+  } else {
+    nextParams.set("categorySlug", categorySlug);
+  }
+
+  const nextSearch = nextParams.toString();
+
+  return `/catalog${nextSearch ? `?${nextSearch}` : ""}`;
+}
+
 export function SideBar({ categories, products }: SideBarProps) {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-  const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams?.toString() ?? "";
   const searchCategorySlug = searchParams?.get("categorySlug") ?? null;
+  const { lookupItem: productCategorySlug, resolvedProduct } =
+    useResolvedCatalogProduct({
+      lookupBySlug: products,
+    });
 
-  const productSlug = useMemo(() => {
-    if (!pathname.startsWith("/product/")) {
-      return null;
-    }
+  const resolvedProductCategorySlug =
+    productCategorySlug ??
+    (resolvedProduct ? resolveProductCategorySlug(resolvedProduct) : null);
 
-    return pathname.split("/product/")[1] ?? null;
-  }, [pathname]);
+  const activeCategorySlug = searchCategorySlug ?? resolvedProductCategorySlug;
+  const sidebarItems = useMemo(
+    () =>
+      categories.map((category) => {
+        const subcategories = getSubcategoriesA(category);
+        const isActive = activeCategorySlug === category.slug;
 
-  const [resolvedProduct, setResolvedProduct] =
-    useState<CatalogProductLookupItem | null>(null);
-
-  useEffect(() => {
-    if (!productSlug || products[productSlug]) {
-      setResolvedProduct(null);
-      return;
-    }
-
-    let isCancelled = false;
-
-    const loadProduct = async () => {
-      try {
-        const response = await fetch(`${baseUrl}/api/catalog/products/${productSlug}`);
-
-        if (!response.ok) {
-          return;
-        }
-
-        const product = (await response.json()) as CatalogProductLookupItem;
-
-        if (!isCancelled) {
-          setResolvedProduct(product);
-        }
-      } catch {
-        if (!isCancelled) {
-          setResolvedProduct(null);
-        }
-      }
-    };
-
-    void loadProduct();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [baseUrl, productSlug, products]);
-
-  const resolvedProductCategorySlug = productSlug
-    ? (products[productSlug] ??
-      resolvedProduct?.categories.subB?.slug ??
-      resolvedProduct?.categories.subA?.slug ??
-      resolvedProduct?.categories.main?.slug ??
-      null)
-    : null;
-
-  const activeCategorySlug =
-    searchCategorySlug ?? (productSlug ? resolvedProductCategorySlug : null);
+        return {
+          category,
+          subcategories,
+          isBranchActive: isActive || hasActiveDescendant(category, activeCategorySlug),
+          categoryHref: buildCategoryHref(
+            searchParamsString,
+            category.slug,
+            isActive,
+          ),
+        };
+      }),
+    [activeCategorySlug, categories, searchParamsString],
+  );
 
   return (
     <div className="mx-[40px] h-auto w-[250px] flex-none flex flex-col">
-      {categories.map((categ) => (
+      {sidebarItems.map((item) => (
         <SideBarLink
-          key={categ.slug}
-          category={categ}
+          key={item.category.slug}
+          category={item.category}
+          subcategories={item.subcategories}
           activeCategorySlug={activeCategorySlug}
+          isBranchActive={item.isBranchActive}
+          categoryHref={item.categoryHref}
         />
       ))}
     </div>

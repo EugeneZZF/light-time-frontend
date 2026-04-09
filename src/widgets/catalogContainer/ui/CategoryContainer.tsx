@@ -15,17 +15,13 @@ export default function CategoryContainer({
 }: CategoryContainerProps) {
   return (
     <div>
-      {sortType ? (
-        <CategoryDetail
-          catalogType={catalogType}
-          categories={categories}
-        ></CategoryDetail>
-      ) : (
-        <CategoryBriefly
-          catalogType={catalogType}
-          categories={categories}
-        ></CategoryBriefly>
-      )}
+      <div style={{ display: sortType ? "block" : "none" }}>
+        <CategoryDetail catalogType={catalogType} categories={categories} />
+      </div>
+
+      <div style={{ display: !sortType ? "block" : "none" }}>
+        <CategoryBriefly catalogType={catalogType} categories={categories} />
+      </div>
     </div>
   );
 }

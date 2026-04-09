@@ -3,64 +3,49 @@
 import { animated, useSpring } from "@react-spring/web";
 import { Category } from "@/entities/category/model/types";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 interface SideBarLinkProps {
   activeCategorySlug: string | null;
   category: Category;
+  subcategories: Category[];
+  isBranchActive: boolean;
+  categoryHref: string;
 }
 
-function getSubcategoriesA(category: Category): Category[] {
-  return category.subcategoriesA ?? category.SubcategoriesA ?? [];
-}
+const EMPTY_CATEGORIES: Category[] = [];
 
 function getSubcategoriesB(category: Category): Category[] {
-  return category.subcategoriesB ?? category.SubcategoriesB ?? [];
-}
-
-function hasActiveDescendant(
-  category: Category,
-  activeCategorySlug: string | null,
-): boolean {
-  if (!activeCategorySlug) {
-    return false;
-  }
-
-  return getSubcategoriesA(category).some((subcategory) => {
-    if (subcategory.slug === activeCategorySlug) {
-      return true;
-    }
-
-    return getSubcategoriesB(subcategory).some(
-      (subSubcategory) => subSubcategory.slug === activeCategorySlug,
-    );
-  });
+  return category.subcategoriesB ?? category.SubcategoriesB ?? EMPTY_CATEGORIES;
 }
 
 export default function SideBarLink({
   activeCategorySlug,
   category,
+  subcategories,
+  isBranchActive,
+  categoryHref,
 }: SideBarLinkProps) {
-  const searchParams = useSearchParams();
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
 
-  const subcategories = getSubcategoriesA(category);
   const hasSubcategories = subcategories.length > 0;
-  const isActive = activeCategorySlug === category.slug;
-  const isBranchActive = isActive || hasActiveDescendant(category, activeCategorySlug);
 
   useLayoutEffect(() => {
-    if (!contentRef.current) {
+    if (!contentRef.current || !isBranchActive || !hasSubcategories) {
       return;
     }
 
     setContentHeight(contentRef.current.scrollHeight);
-  }, [subcategories, isBranchActive, activeCategorySlug]);
+  }, [hasSubcategories, isBranchActive]);
 
   useEffect(() => {
-    if (!contentRef.current || typeof ResizeObserver === "undefined") {
+    if (
+      !contentRef.current ||
+      !isBranchActive ||
+      !hasSubcategories ||
+      typeof ResizeObserver === "undefined"
+    ) {
       return;
     }
 
@@ -73,7 +58,7 @@ export default function SideBarLink({
     observer.observe(contentRef.current);
 
     return () => observer.disconnect();
-  }, []);
+  }, [hasSubcategories, isBranchActive]);
 
   const animatedStyles = useSpring({
     height: isBranchActive && hasSubcategories ? contentHeight : 0,
@@ -84,16 +69,6 @@ export default function SideBarLink({
       friction: 22,
     },
   });
-
-  const nextParams = new URLSearchParams(searchParams?.toString() ?? "");
-
-  if (isActive) {
-    nextParams.delete("categorySlug");
-  } else {
-    nextParams.set("categorySlug", category.slug);
-  }
-
-  const categoryHref = `/catalog${nextParams.toString() ? `?${nextParams.toString()}` : ""}`;
 
   return (
     <div className="mb-2">

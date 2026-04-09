@@ -4,8 +4,7 @@ import { getProducts } from "@/entities/product/api/getProductLasted";
 import { getLatestNews } from "@/shared/api/news";
 
 export async function NewTovatContainer() {
-  const products = await getProducts();
-  const news = await getLatestNews(2);
+  const [products, news] = await Promise.all([getProducts(), getLatestNews(2)]);
 
   // console.log("news:", news);
 
