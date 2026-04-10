@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { getBrandBySlug } from "@/entities/brand";
 import { CatalogProductLookupItem } from "@/entities/product/api/getProductQuery";
 import { BreadcrumbItem } from "@/shared/lib/catalog/lookups";
 import { useResolvedCatalogProduct } from "@/shared/lib/catalog/useResolvedCatalogProduct";
+import Link from "next/link";
+import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import Palka from "./Palka";
 
 interface CatalogBreadcrumbsProps {
@@ -17,15 +19,24 @@ type ProductBreadcrumbState = {
   categories: BreadcrumbItem[];
 };
 
+type BrandTitleState = {
+  slug: string;
+  title: string | null;
+};
+
 export default function CatalogBreadcrumbs({
   categoryBreadcrumbsBySlug,
   productsBySlug,
 }: CatalogBreadcrumbsProps) {
+  const params = useParams<{ brandSlug?: string }>();
   const searchParams = useSearchParams();
+  const brandSlug =
+    typeof params?.brandSlug === "string" ? params.brandSlug : null;
   const activeCategorySlug = searchParams?.get("categorySlug") ?? null;
   const items = activeCategorySlug
     ? (categoryBreadcrumbsBySlug[activeCategorySlug] ?? [])
     : [];
+  const [brandState, setBrandState] = useState<BrandTitleState | null>(null);
   const { productSlug, lookupItem: productFromLookup, resolvedProduct } =
     useResolvedCatalogProduct({
       lookupBySlug: productsBySlug,
@@ -58,9 +69,40 @@ export default function CatalogBreadcrumbs({
       }
     : { categories: [] };
 
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!brandSlug || productSlug) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const activeBrandSlug = brandSlug;
+
+    async function loadBrand() {
+      const brand = await getBrandBySlug(activeBrandSlug);
+
+      if (isMounted) {
+        setBrandState({
+          slug: activeBrandSlug,
+          title: brand?.name ?? null,
+        });
+      }
+    }
+
+    void loadBrand();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [brandSlug, productSlug]);
+
   const title = productSlug
     ? (productState.title ?? "")
-    : (items[items.length - 1]?.label ?? "Каталог продукции");
+    : brandSlug
+      ? (brandState?.slug === brandSlug ? brandState.title : "")
+      : (items[items.length - 1]?.label ?? "Каталог продукции");
   const visibleCategories = productSlug ? productState.categories : items;
 
   return (
@@ -72,14 +114,12 @@ export default function CatalogBreadcrumbs({
         <Link href="/" className="transition hover:text-[#ff3333]">
           Главная
         </Link>
-        {/* <span className="text-[#c9c9c9]">/</span> */}
         <Palka />
         <Link href="/catalog" className="transition hover:text-[#ff3333]">
           Каталог
         </Link>
         {visibleCategories.map((item, index) => (
           <span key={`${item.label}-${index}`} className="contents">
-            {/* <span className="text-[#c9c9c9]">/</span> */}
             <Palka />
             {item.href ? (
               <Link

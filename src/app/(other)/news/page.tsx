@@ -9,7 +9,7 @@ export default async function NewsPage() {
   console.log("Новости:", news);
 
   return (
-    <section className=" h-[1000px] bg-amber-200">
+    <section className=" h-[1000px] ">
       <h1 className="mb-[18px] text-[28px] leading-[1.18] font-bold tracking-[-0.02em] text-[#00a040]">
         Новости
       </h1>

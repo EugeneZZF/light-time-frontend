@@ -5,6 +5,7 @@ import { Product } from "@/entities/product/model/types";
 import ProductImageGallery from "@/entities/product/ui/ProductImageGallery";
 import ProductPurchasePanel from "@/entities/product/ui/ProductPurchasePanel";
 import ShortCardProduct from "@/entities/product/ui/ShortCardProduct";
+import { Metadata } from "next";
 
 type ItemPageProps = {
   params: Promise<{
@@ -39,6 +40,38 @@ const SPECIFICATION_LABELS: Record<string, string> = {
   voltageV: "Напряжение, В",
   weightKg: "Вес, кг",
 };
+
+export async function generateMetadata({
+  params,
+}: ItemPageProps): Promise<Metadata> {
+  const { itemSlug } = await params;
+  const product = await getProductBySlug(itemSlug);
+
+  if (!product) {
+    return {
+      title: "Товар не найден | Light time",
+      description: "Страница товара не найдена",
+    };
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
+  const image = product.img?.[0]?.url
+    ? `${baseUrl}${product.img[0].url}`
+    : null;
+
+  return {
+    title: `${product.title} | Light time`,
+    description:
+      product.description?.slice(0, 160) ||
+      `Купить ${product.title} по выгодной цене`,
+    openGraph: {
+      title: product.title,
+      description:
+        product.description?.slice(0, 160) || `Купить ${product.title}`,
+      images: image ? [{ url: image }] : [],
+    },
+  };
+}
 
 function formatPrice(value: string) {
   const numericPrice = Number(
@@ -144,7 +177,9 @@ export default async function ItemPage({ params }: ItemPageProps) {
             price={formatPrice(item.price)}
             hasDiscount={item.discount.hasDiscount}
             new_price={
-              item.discount.new_price ? formatPrice(item.discount.new_price) : null
+              item.discount.new_price
+                ? formatPrice(item.discount.new_price)
+                : null
             }
           />
 

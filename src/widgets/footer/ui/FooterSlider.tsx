@@ -1,19 +1,48 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { getBrands, type Brand } from "@/entities/brand";
+import Link from "next/link";
 
-const brands = Array.from({ length: 33 }, (_, index) => ({
-  id: index + 1,
-  src: `/brand/brand (${index + 1}).png`,
-  alt: `Brand ${index + 1}`,
-}));
+const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+function getBrandImageUrl(imageUrl?: string | null) {
+  if (!imageUrl) {
+    return "";
+  }
+
+  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+    return imageUrl;
+  }
+
+  return `${baseUrl}${imageUrl}`;
+}
 
 export default function FooterSlider() {
   const sliderId = useId().replace(/:/g, "");
   const prevClassName = `footer-slider-prev-${sliderId}`;
   const nextClassName = `footer-slider-next-${sliderId}`;
+  const [brands, setBrands] = useState<Brand[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadBrands() {
+      const result = await getBrands();
+
+      if (isMounted) {
+        setBrands(result.filter((brand) => Boolean(brand.imageUrl)));
+      }
+    }
+
+    void loadBrands();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="relative w-full   px-12 ">
@@ -28,7 +57,7 @@ export default function FooterSlider() {
 
       <Swiper
         modules={[Navigation]}
-        loop
+        loop={brands.length > 4}
         speed={700}
         spaceBetween={24}
         navigation={{
@@ -49,15 +78,16 @@ export default function FooterSlider() {
       >
         {brands.map((brand) => (
           <SwiperSlide key={brand.id}>
-            <div className="flex h-[72px] items-center justify-center">
+            <Link
+              href={`/brand/${brand.slug}`}
+              className="flex h-[72px] items-center justify-center"
+            >
               <img
-                src={brand.src}
-                alt={brand.alt}
-                // width={186}
-                // height={41}
+                src={getBrandImageUrl(brand.imageUrl)}
+                alt={brand.name}
                 className=" w-auto object-contain opacity-60 grayscale transition duration-300 hover:opacity-100"
               />
-            </div>
+            </Link>
           </SwiperSlide>
         ))}
       </Swiper>

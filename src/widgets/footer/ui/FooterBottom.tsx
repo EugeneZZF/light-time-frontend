@@ -53,7 +53,7 @@ export default function FooterBottom() {
             <span className="absolute left-1/2 top-[5px] h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[#a8a8a8]" />
             <span className="absolute bottom-[-6px] left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-[#a8a8a8] bg-transparent" />
           </span> */}
-          <img src={"./footer/metka.png"} className="w-[12px] h-[17px]"></img>
+          <img src="/footer/metka.png" className="h-[17px] w-[12px]" alt="" />
           <Link
             href="#address"
             className="border-b border-[#d7d7d7] leading-[1.25] transition hover:border-[#ff3333] hover:text-[#ff3333]"
