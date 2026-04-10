@@ -5,7 +5,7 @@ import {
 import { AdminSidebar } from "@/widgets/adminShell";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 
 type ProtectedAdminLayoutProps = {
   children: ReactNode;
@@ -21,6 +21,20 @@ export default async function ProtectedAdminLayout({
   // if (!session) {
   //   redirect("/admin/login");
   // }
+
+  useEffect(() => {
+    const sessionValue = localStorage.getItem("admin_session");
+    const sessionTimestamp = localStorage.getItem("admin_session_timestamp");
+    const isSessionValid =
+      sessionValue &&
+      sessionTimestamp &&
+      Date.now() - parseInt(sessionTimestamp) < 1 * 20 * 60 * 1000; // 24 часа
+    if (!isSessionValid) {
+      localStorage.removeItem("admin_session");
+      localStorage.removeItem("admin_session_timestamp");
+      redirect("/admin/login");
+    }
+  }, []);
 
   return (
     <section className="min-h-screen bg-[linear-gradient(180deg,#f6f5ef_0%,#f9fbf7_45%,#eef5ef_100%)] px-4 py-6 md:px-6">

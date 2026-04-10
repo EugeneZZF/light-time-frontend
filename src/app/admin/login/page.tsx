@@ -45,6 +45,7 @@ export default function Login() {
       if (data.accessToken) {
         localStorage.setItem("admin_access_token", data.accessToken);
         localStorage.setItem("admin_session", data.accessToken);
+        localStorage.setItem("admin_session_timestamp", Date.now().toString());
         // document.cookie = `admin_session=${data.accessToken}; path=/; max-age=86400;`;
       }
 
