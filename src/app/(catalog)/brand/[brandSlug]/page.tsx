@@ -48,7 +48,7 @@ export default async function BrandPage({ params }: BrandPageProps) {
   }
 
   return (
-    <div>
+    <div className="pb-[250px]">
       <div className="w-full text-[15px] pb-[40px] ml-[20px]">
         {brand.imageUrl ? (
           <img
